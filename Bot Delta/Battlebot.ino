@@ -1,5 +1,6 @@
 #include <QTRSensors.h>
 #include <Servo.h>
+#include <EEPROM.h>
 #include <SoftwareSerial.h>
 
 // Define the data transmit/receive pins in Arduino
@@ -68,6 +69,25 @@ void setup()
   }
   Serial.println("");
   Serial.println("Calibration complete");
+  
+  /*
+  qtr.calibrationOn.minimum[0] = 250;
+  qtr.calibrationOn.minimum[1] = 257;
+  qtr.calibrationOn.minimum[2] = 273;
+  qtr.calibrationOn.minimum[3] = 435;
+  qtr.calibrationOn.minimum[4] = 263;
+  qtr.calibrationOn.minimum[5] = 177;
+  qtr.calibrationOn.minimum[6] = 181;
+  qtr.calibrationOn.minimum[7] = 252;
+  qtr.calibrationOn.maximum[0] = 984;
+  qtr.calibrationOn.maximum[1] = 972;
+  qtr.calibrationOn.maximum[2] = 974;
+  qtr.calibrationOn.maximum[3] = 979;
+  qtr.calibrationOn.maximum[4] = 969;
+  qtr.calibrationOn.maximum[5] = 959;
+  qtr.calibrationOn.maximum[6] = 966;
+  qtr.calibrationOn.maximum[7] = 978;
+  */
 
   // Initiate Gripper
   servo.attach(gripper);
@@ -110,7 +130,20 @@ void loop()
   {
     openGripper();
   }
-  
+
+  // Check the sensors and output the values
+  uint16_t sensors[8];
+  uint16_t sensors_threshold[8];
+  qtr.readLineBlack(sensors);
+
+  for (uint16_t i = 0; i < 8; i++)
+  {
+    sensors_threshold[i] = sensors[i]/lineThreshold;
+    Serial.print(sensors_threshold[i]);
+    Serial.print("\t");
+    if (i == 7) { Serial.println(""); }
+  }
+
   // Control Wheels based on Distance
   if (distance < 30)
   {
@@ -118,19 +151,31 @@ void loop()
   }
   else
   {
-    driveFwd();
+    if (sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] + sensors_threshold[3] + sensors_threshold[4] + sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7] < 3)
+    {
+      if (sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] > 2)
+      {
+        driveLeftWheel();
+      }
+      else if (sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7] > 2)
+      {
+        driveRightWheel();
+      }
+      else
+      {
+        driveFwd();
+      }
+    }
+    else if (sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] + sensors_threshold[3] + sensors_threshold[4] + sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7] < 1)
+    {
+      rotateLeft();
+    }
+    else
+    {
+      driveFwd();
+    }
   }
-
-  // Check the sensors and output the values
-  uint16_t sensors[8];
-  qtr.readLineBlack(sensors);
-
-  for (uint16_t i = 0; i < 8; i++)
-  {
-    Serial.print(sensors[i]/lineThreshold);
-    Serial.print("\t");
-    if (i == 7) { Serial.println(""); }
-  }
+  Serial.println(sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] + sensors_threshold[3] + sensors_threshold[4] + sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7]);
 
   // Divide Debug line
   Serial.println("-----------------------------------------------------");
@@ -158,8 +203,8 @@ void closeGripper() { servo.write(closedAngle); }
 
 // Forward
 void driveFwd() { driveLeftWheel(); driveRightWheel(); }
-void driveLeftWheel() { breakLeftWheel(); analogWrite(leftWheelFwd, 255); }
-void driveRightWheel() { breakRightWheel(); analogWrite(rightWheelFwd, 255); }
+void driveLeftWheel() { driveBreak(); analogWrite(leftWheelFwd, 255); }
+void driveRightWheel() { driveBreak(); analogWrite(rightWheelFwd, 255); }
 
 // Backwards
 void driveBwd() { reverseLeftWheel(); reverseRightWheel(); }

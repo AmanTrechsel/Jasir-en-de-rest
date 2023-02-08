@@ -1,5 +1,4 @@
 #include <QTRSensors.h>
-#include <Servo.h>
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
@@ -10,28 +9,35 @@
 SoftwareSerial mySerial(RxD, TxD); // RX, TX for Bluetooth
 
 // Gripper
-const int gripper = 13;
-const int closedAngle = 40;
-const int openedAngle = 100;
+const int gripper = 10;
+const int closedAngle = 250;
+const int openedAngle = 1400;
 
 // Clicker
 const int echo = 12; // Speaker
-const int trig = 11; // Microphone
+const int trig = 13; // Microphone
 long duration;
 int distance;
 
 // Motor
-const int leftWheelFwd = 9;
-const int leftWheelBwd = 8;
-const int rightWheelBwd = 7;
-const int rightWheelFwd = 6;
+const int leftWheelFwd = 11;
+const int leftWheelBwd = 6;
+const int rightWheelBwd = 5;
+const int rightWheelFwd = 3;
+//
+int loopcount;
+int speedforce = 255;
+const int rotatespeed = 150;
+const int drivespeed = 150;
+int readLineblack;
 
 // Sensors
 QTRSensors qtr;
-const int lineThreshold = 750;
+const int lineThreshold = 900;
+uint16_t sensors[8];
+uint16_t sensors_threshold[8];
 
-// Servo
-Servo servo;
+
 
 void setup()
 {
@@ -42,10 +48,10 @@ void setup()
   pinMode(echo, INPUT);
 
   // Wheels
-  pinMode(leftWheelFwd, INPUT);
-  pinMode(leftWheelBwd, INPUT);
-  pinMode(rightWheelFwd, INPUT);
-  pinMode(rightWheelBwd, INPUT);
+  pinMode(leftWheelFwd, OUTPUT);
+  pinMode(leftWheelBwd, OUTPUT);
+  pinMode(rightWheelFwd, OUTPUT);
+  pinMode(rightWheelBwd, OUTPUT);
 
   // Line Sensor
   qtr.setTypeAnalog();
@@ -60,6 +66,15 @@ void setup()
   Serial.print("Calibrating");
   for (i = 0; i < 250; i++)
   {
+    driveBreak();
+    if (i%10==0)
+    {
+      i%20==0 ? rotateLeft() : rotateRight();
+    }
+    else if (i%15==0)
+    {
+      i%30==0 ? rotateLeft() : rotateRight(); 
+    }
     if ((i%100==0 || i == 150) && i > 0)
     {
       Serial.print(".");
@@ -90,7 +105,7 @@ void setup()
   */
 
   // Initiate Gripper
-  servo.attach(gripper);
+  pinMode (gripper, OUTPUT);
 
   // Start 'Animation'
   delay(150);
@@ -105,6 +120,12 @@ void setup()
 
 void loop()
 {
+  if(speedforce == rotatespeed)
+ {
+  
+ }
+ loopcount++; 
+
   // Start Debug line
   Serial.println("===============================================================");
   Serial.println("");
@@ -122,7 +143,7 @@ void loop()
   Serial.println("");
 
   // Control Gripper based on Distance
-  if (distance < 15)
+  if (distance < 5)
   {
     closeGripper();
   }
@@ -134,7 +155,7 @@ void loop()
   // Check the sensors and output the values
   uint16_t sensors[8];
   uint16_t sensors_threshold[8];
-  qtr.readLineBlack(sensors);
+ readLineblack = qtr.readLineBlack(sensors);
 
   for (uint16_t i = 0; i < 8; i++)
   {
@@ -143,44 +164,39 @@ void loop()
     Serial.print("\t");
     if (i == 7) { Serial.println(""); }
   }
-
+ 
   // Control Wheels based on Distance
-  if (distance < 30)
-  {
-    driveBreak();
-  }
-  else
-  {
-    if (sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] + sensors_threshold[3] + sensors_threshold[4] + sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7] < 3)
+    if(readLineblack > 0)
     {
-      if (sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] > 2)
+      if(readLineblack <= 2500)
       {
-        driveLeftWheel();
+        speedforce = rotatespeed;
+        rotateLeft();
       }
-      else if (sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7] > 2)
+      else if(readLineblack >= 4500)
       {
-        driveRightWheel();
+        speedforce = rotatespeed;
+        rotateRight();
       }
       else
       {
+        speedforce = drivespeed;
         driveFwd();
       }
-    }
-    else if (sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] + sensors_threshold[3] + sensors_threshold[4] + sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7] < 1)
-    {
-      rotateLeft();
+      
     }
     else
     {
-      driveFwd();
+      speedforce = rotatespeed;
+     rotateLeft();
+     
     }
-  }
-  Serial.println(sensors_threshold[0] + sensors_threshold[1] + sensors_threshold[2] + sensors_threshold[3] + sensors_threshold[4] + sensors_threshold[5] + sensors_threshold[6] + sensors_threshold[7]);
-
+ 
   // Divide Debug line
   Serial.println("-----------------------------------------------------");
   Serial.println("");
 }
+
 
 // Calculate Distance
 int getDistance()
@@ -198,18 +214,18 @@ int getDistance()
 }
 
 // Gripper
-void openGripper() { servo.write(openedAngle); }
-void closeGripper() { servo.write(closedAngle); }
+void openGripper() {analogWrite(gripper, openedAngle);}
+void closeGripper() {analogWrite(gripper, closedAngle);}
 
 // Forward
-void driveFwd() { driveLeftWheel(); driveRightWheel(); }
-void driveLeftWheel() { driveBreak(); analogWrite(leftWheelFwd, 255); }
-void driveRightWheel() { driveBreak(); analogWrite(rightWheelFwd, 255); }
+void driveFwd() {  driveLeftWheel(); driveRightWheel(); }
+void driveLeftWheel() {  analogWrite(leftWheelBwd, 0); analogWrite(leftWheelFwd, speedforce); }
+void driveRightWheel() {  analogWrite(rightWheelBwd, 0); analogWrite(rightWheelFwd, speedforce);  }
 
 // Backwards
 void driveBwd() { reverseLeftWheel(); reverseRightWheel(); }
-void reverseLeftWheel() { breakLeftWheel(); analogWrite(leftWheelBwd, 255); }
-void reverseRightWheel() { breakRightWheel(); analogWrite(rightWheelBwd, 255); }
+void reverseLeftWheel() { analogWrite(leftWheelBwd, speedforce); }
+void reverseRightWheel() { analogWrite(rightWheelBwd, speedforce); }
 
 // Breaking
 void driveBreak() { breakLeftWheel(); breakRightWheel(); }
@@ -217,5 +233,5 @@ void breakLeftWheel() { analogWrite(leftWheelFwd, 0); analogWrite(leftWheelBwd, 
 void breakRightWheel() { analogWrite(rightWheelFwd, 0); analogWrite(rightWheelBwd, 0); }
 
 // Rotation
-void rotateRight() { driveLeftWheel(); reverseRightWheel(); }
-void rotateLeft() { driveRightWheel(); reverseLeftWheel(); }
+void rotateRight() { driveBreak(); driveLeftWheel(); reverseRightWheel(); }
+void rotateLeft() { driveBreak(); driveRightWheel(); reverseLeftWheel();  }

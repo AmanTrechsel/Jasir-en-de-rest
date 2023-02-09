@@ -1,12 +1,6 @@
+// Libraries
 #include <QTRSensors.h>
-#include <EEPROM.h>
 #include <SoftwareSerial.h>
-
-// Define the data transmit/receive pins in Arduino
-#define TxD 2
-#define RxD 3
-
-SoftwareSerial mySerial(RxD, TxD); // RX, TX for Bluetooth
 
 // Gripper
 const int gripper = 10;
@@ -24,25 +18,26 @@ const int leftWheelFwd = 11;
 const int leftWheelBwd = 6;
 const int rightWheelBwd = 5;
 const int rightWheelFwd = 3;
-//
-int loopcount;
-int speedforce = 255;
-const int rotatespeed = 150;
-const int drivespeed = 150;
-int readLineblack;
+const int rotationSpeed = 150; // Speed at which to rotate
+const int driveSpeed = 150; // Speed at which to drive
+int actualSpeed = 255; // The currently set speed to the motors
 
 // Sensors
 QTRSensors qtr;
-const int lineThreshold = 900;
 uint16_t sensors[8];
-uint16_t sensors_threshold[8];
+int lineReadData; // Value depending on where the sensor is detecting a line
+                  // A value closer to 0 is more left; closer to 7000 is more right; 3500 is center
+                  // 0 means no line is detected; 7000 means everything is detecting.
 
+// Sensor Calibration
+const int calibrationTime = 250; // in milliseconds * 20 (50 = 1 second)
+const bool shouldCalibrate = true;
 
+// Loop Counter
+int loopCounter;
 
 void setup()
-{
-  mySerial.begin(9600); // For Bluetooth
-  
+{  
   // Echo locator
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
@@ -61,51 +56,35 @@ void setup()
   Serial.begin(9600);
 
   // Sensor Calibration
-  int i;
-  Serial.println("");
-  Serial.print("Calibrating");
-  for (i = 0; i < 250; i++)
+  if (shouldCalibrate)
   {
-    driveBreak();
-    if (i%10==0)
+    int i;
+    Serial.println("");
+    Serial.print("Calibrating");
+    for (i = 0; i < calibrationTime; i++)
     {
-      i%20==0 ? rotateLeft() : rotateRight();
+      driveBreak();
+      if (i % 10 == 0)
+      {
+        (i % 20 == 0) ? rotateLeft() : rotateRight();
+      }
+      else if (i % 15 == 0)
+      {
+        (i % 30 == 0) ? rotateLeft() : rotateRight(); 
+      }
+      if ((i % 100 == 0 || i == 150) && i > 0)
+      {
+        Serial.print(".");
+      }
+      qtr.calibrate();
+      delay(20);
     }
-    else if (i%15==0)
-    {
-      i%30==0 ? rotateLeft() : rotateRight(); 
-    }
-    if ((i%100==0 || i == 150) && i > 0)
-    {
-      Serial.print(".");
-    }
-    qtr.calibrate();
-    delay(20);
+    Serial.println("");
+    Serial.println("Calibration complete");
   }
-  Serial.println("");
-  Serial.println("Calibration complete");
-  
-  /*
-  qtr.calibrationOn.minimum[0] = 250;
-  qtr.calibrationOn.minimum[1] = 257;
-  qtr.calibrationOn.minimum[2] = 273;
-  qtr.calibrationOn.minimum[3] = 435;
-  qtr.calibrationOn.minimum[4] = 263;
-  qtr.calibrationOn.minimum[5] = 177;
-  qtr.calibrationOn.minimum[6] = 181;
-  qtr.calibrationOn.minimum[7] = 252;
-  qtr.calibrationOn.maximum[0] = 984;
-  qtr.calibrationOn.maximum[1] = 972;
-  qtr.calibrationOn.maximum[2] = 974;
-  qtr.calibrationOn.maximum[3] = 979;
-  qtr.calibrationOn.maximum[4] = 969;
-  qtr.calibrationOn.maximum[5] = 959;
-  qtr.calibrationOn.maximum[6] = 966;
-  qtr.calibrationOn.maximum[7] = 978;
-  */
 
   // Initiate Gripper
-  pinMode (gripper, OUTPUT);
+  pinMode(gripper, OUTPUT);
 
   // Start 'Animation'
   delay(150);
@@ -120,12 +99,6 @@ void setup()
 
 void loop()
 {
-  if(speedforce == rotatespeed)
- {
-  
- }
- loopcount++; 
-
   // Start Debug line
   Serial.println("===============================================================");
   Serial.println("");
@@ -153,48 +126,46 @@ void loop()
   }
 
   // Check the sensors and output the values
-  uint16_t sensors[8];
-  uint16_t sensors_threshold[8];
- readLineblack = qtr.readLineBlack(sensors);
-
+  lineReadData = qtr.lineReadData(sensors);
   for (uint16_t i = 0; i < 8; i++)
   {
-    sensors_threshold[i] = sensors[i]/lineThreshold;
-    Serial.print(sensors_threshold[i]);
+    Serial.print(sensors[i]);
     Serial.print("\t");
     if (i == 7) { Serial.println(""); }
   }
  
   // Control Wheels based on Distance
-    if(readLineblack > 0)
+  if (lineReadData > 0)
+  {
+    if (lineReadData <= 2500)
     {
-      if(readLineblack <= 2500)
-      {
-        speedforce = rotatespeed;
-        rotateLeft();
-      }
-      else if(readLineblack >= 4500)
-      {
-        speedforce = rotatespeed;
-        rotateRight();
-      }
-      else
-      {
-        speedforce = drivespeed;
-        driveFwd();
-      }
-      
+      actualSpeed = rotationSpeed;
+      rotateLeft();
+    }
+    else if (lineReadData >= 4500)
+    {
+      actualSpeed = rotationSpeed;
+      rotateRight();
     }
     else
     {
-      speedforce = rotatespeed;
-     rotateLeft();
-     
+      actualSpeed = driveSpeed;
+      driveFwd();
     }
+  }
+  else // Cannot detect any lines
+  {
+    // Prefer left over right, so rotate right.
+    actualSpeed = rotationSpeed;
+    rotateLeft();
+  }
  
   // Divide Debug line
   Serial.println("-----------------------------------------------------");
   Serial.println("");
+
+  // Increment loop counter
+  loopCounter += 1;
 }
 
 
@@ -214,24 +185,82 @@ int getDistance()
 }
 
 // Gripper
-void openGripper() {analogWrite(gripper, openedAngle);}
-void closeGripper() {analogWrite(gripper, closedAngle);}
+void openGripper()
+{
+  analogWrite(gripper, openedAngle);
+}
+
+void closeGripper()
+{
+  analogWrite(gripper, closedAngle);
+}
 
 // Forward
-void driveFwd() {  driveLeftWheel(); driveRightWheel(); }
-void driveLeftWheel() {  analogWrite(leftWheelBwd, 0); analogWrite(leftWheelFwd, speedforce); }
-void driveRightWheel() {  analogWrite(rightWheelBwd, 0); analogWrite(rightWheelFwd, speedforce);  }
+void driveFwd()
+{
+  driveLeftWheel();
+  driveRightWheel();
+}
+
+void driveLeftWheel()
+{
+  analogWrite(leftWheelBwd, 0);
+  analogWrite(leftWheelFwd, actualSpeed);
+}
+
+void driveRightWheel()
+{
+  analogWrite(rightWheelBwd, 0);
+  analogWrite(rightWheelFwd, actualSpeed);
+}
 
 // Backwards
-void driveBwd() { reverseLeftWheel(); reverseRightWheel(); }
-void reverseLeftWheel() { analogWrite(leftWheelBwd, speedforce); }
-void reverseRightWheel() { analogWrite(rightWheelBwd, speedforce); }
+void driveBwd()
+{
+  reverseLeftWheel();
+  reverseRightWheel();
+}
+
+void reverseLeftWheel()
+{
+  analogWrite(leftWheelBwd, actualSpeed);
+}
+
+void reverseRightWheel()
+{
+  analogWrite(rightWheelBwd, actualSpeed);
+}
 
 // Breaking
-void driveBreak() { breakLeftWheel(); breakRightWheel(); }
-void breakLeftWheel() { analogWrite(leftWheelFwd, 0); analogWrite(leftWheelBwd, 0); }
-void breakRightWheel() { analogWrite(rightWheelFwd, 0); analogWrite(rightWheelBwd, 0); }
+void driveBreak()
+{
+  breakLeftWheel();
+  breakRightWheel();
+}
+
+void breakLeftWheel()
+{
+  analogWrite(leftWheelFwd, 0);
+  analogWrite(leftWheelBwd, 0);
+}
+
+void breakRightWheel()
+{
+  analogWrite(rightWheelFwd, 0);
+  analogWrite(rightWheelBwd, 0);
+}
 
 // Rotation
-void rotateRight() { driveBreak(); driveLeftWheel(); reverseRightWheel(); }
-void rotateLeft() { driveBreak(); driveRightWheel(); reverseLeftWheel();  }
+void rotateRight()
+{
+  driveBreak();
+  driveLeftWheel();
+  reverseRightWheel();
+}
+
+void rotateLeft()
+{
+  driveBreak();
+  driveRightWheel();
+  reverseLeftWheel();
+}

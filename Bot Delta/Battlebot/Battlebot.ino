@@ -6,8 +6,8 @@
 
 // Gripper
 const int gripper = 10;
-const int closedAngle = 250;
-const int openedAngle = 1400;
+const int closedAngle = 180;
+const int openedAngle = 130;
 
 // Clicker
 const int echo = 12; // Speaker
@@ -21,7 +21,7 @@ const int leftWheelBwd = 6;
 const int rightWheelBwd = 5;
 const int rightWheelFwd = 3;
 const int rotationSpeed = 150; // Speed at which to rotate
-const int driveSpeed = 150; // Speed at which to drive
+const int driveSpeed = 190; // Speed at which to drive
 int actualSpeed = 255; // The currently set speed to the motors
 
 // Sensors
@@ -37,6 +37,10 @@ const bool shouldCalibrate = true;
 
 // Loop Counter
 int loopCounter;
+
+//rotatedLeftLast
+bool rotatedLeftLast;
+
 
 // Bluetooth
 SoftwareSerial configureBT(2, 4); // TX || RX
@@ -174,11 +178,13 @@ void loop()
     {
       actualSpeed = rotationSpeed;
       rotateLeft(true);
+      rotatedLeftLast = true;
     }
     else if (lineReadData >= 4500)
     {
       actualSpeed = rotationSpeed;
       rotateRight(true);
+      rotatedLeftLast = false;
     }
     else
     {
@@ -190,7 +196,7 @@ void loop()
   {
     // Prefer left over right, so rotate right.
     actualSpeed = rotationSpeed;
-    rotateLeft(true);
+    (rotatedLeftLast ? rotateLeft(true) : rotateRight(true));
   }
  
   // Divide Debug line
@@ -273,6 +279,15 @@ void reverseRightWheel()
 {
   analogWrite(rightWheelBwd, actualSpeed);
 }
+void slowLeftWheel()
+{
+  analogWrite(leftWheelFwd, actualSpeed / 10);
+}
+
+void slowRightWheel()
+{
+  analogWrite(rightWheelFwd, actualSpeed / 10);
+}
 
 // Breaking
 void driveBreak(bool doLights)
@@ -308,7 +323,7 @@ void rotateRight(bool doLights)
   }
   driveBreak(false);
   driveLeftWheel();
-  reverseRightWheel();
+  slowRightWheel();
 }
 
 void rotateLeft(bool doLights)
@@ -320,7 +335,7 @@ void rotateLeft(bool doLights)
   }
   driveBreak(false);
   driveRightWheel();
-  reverseLeftWheel();
+  slowLeftWheel();
 }
 
 // Neo Pixel

@@ -1,6 +1,8 @@
 // Libraries
 #include <QTRSensors.h>
 #include <SoftwareSerial.h>
+#include <Adafruit_NeoPixel.h>
+
 
 // Gripper
 const int gripper = 10;
@@ -36,8 +38,22 @@ const bool shouldCalibrate = false;
 // Loop Counter
 int loopCounter;
 
+// Bluetooth
+SoftwareSerial configureBT(2, 4); // TX || RX
+
+// NEO PIXELS
+Adafruit_NeoPixel ni(4, 8, NEO_GRB + NEO_KHZ800);
+
+
 void setup()
 {  
+  // Bluetooth setup 
+  Serial.begin(9600);
+  configureBT.begin(38400); 
+
+  // NEO setup
+  ni.begin();
+  
   // Echo locator
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
@@ -99,6 +115,39 @@ void setup()
 
 void loop()
 {
+    // NEO clear
+    ni.clear();
+    
+ 
+
+    ni.setPixelColor(0, ni.Color(0, 150, 0));
+    ni.show();
+    
+     ni.setPixelColor(1, ni.Color(80, 180, 100));
+    ni.show();
+    
+     ni.setPixelColor(2, ni.Color(50, 10, 70));
+     ni.show();
+    
+     ni.setPixelColor(3, ni.Color(150, 0, 150));
+    ni.show();
+    
+    
+   // Serial monitor
+  if (configureBT.available()) {
+    Serial.write(configureBT.read());
+  }
+  
+  if (Serial.available()) {
+    configureBT.write(Serial.read());
+  }
+
+  // Sending
+
+
+
+  // Receiving
+  
   // Start Debug line
   Serial.println("===============================================================");
   Serial.println("");

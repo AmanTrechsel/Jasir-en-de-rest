@@ -31,7 +31,7 @@ int lineReadData; // Value depending on where the sensor is detecting a line
 
 // Sensor Calibration
 const int calibrationTime = 250; // in milliseconds * 20 (50 = 1 second)
-const bool shouldCalibrate = true;
+const bool shouldCalibrate = false;
 
 // Loop Counter
 int loopCounter;
@@ -118,15 +118,15 @@ void loop()
   // Control Gripper based on Distance
   if (distance < 5)
   {
-    closeGripper();
+    openGripper();
   }
   else
   {
-    openGripper();
+    closeGripper();
   }
 
   // Check the sensors and output the values
-  lineReadData = qtr.lineReadData(sensors);
+  lineReadData = qtr.readLineBlack(sensors);
   for (uint16_t i = 0; i < 8; i++)
   {
     Serial.print(sensors[i]);

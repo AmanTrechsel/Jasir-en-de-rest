@@ -33,7 +33,7 @@ int lineReadData; // Value depending on where the sensor is detecting a line
 
 // Sensor Calibration
 const int calibrationTime = 250; // in milliseconds * 20 (50 = 1 second)
-const bool shouldCalibrate = false;
+const bool shouldCalibrate = true;
 
 // Loop Counter
 int loopCounter;
@@ -42,7 +42,7 @@ int loopCounter;
 SoftwareSerial configureBT(2, 4); // TX || RX
 
 // NEO PIXELS
-Adafruit_NeoPixel ni(4, 8, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel neoPixel(4, 7, NEO_GRB + NEO_KHZ800);
 
 
 void setup()
@@ -52,7 +52,7 @@ void setup()
   configureBT.begin(38400); 
 
   // NEO setup
-  ni.begin();
+  neoPixel.begin();
   
   // Echo locator
   pinMode(trig, OUTPUT);
@@ -79,14 +79,19 @@ void setup()
     Serial.print("Calibrating");
     for (i = 0; i < calibrationTime; i++)
     {
-      driveBreak();
+      neoPixel.clear();
+        neoFrontLeft(random(150),random(150),random(150));
+        neoFrontRight(random(150),random(150),random(150));
+        neoBackLeft(random(150),random(150),random(150));
+        neoBackRight(random(150),random(150),random(150));
+      driveBreak(false);
       if (i % 10 == 0)
       {
-        (i % 20 == 0) ? rotateLeft() : rotateRight();
+        (i % 20 == 0) ? rotateLeft(false) : rotateRight(false);
       }
       else if (i % 15 == 0)
       {
-        (i % 30 == 0) ? rotateLeft() : rotateRight(); 
+        (i % 30 == 0) ? rotateLeft(false) : rotateRight(false); 
       }
       if ((i % 100 == 0 || i == 150) && i > 0)
       {
@@ -115,25 +120,10 @@ void setup()
 
 void loop()
 {
-    // NEO clear
-    ni.clear();
+  // NEO clear
+  neoClear();
     
- 
-
-    ni.setPixelColor(0, ni.Color(0, 150, 0));
-    ni.show();
-    
-     ni.setPixelColor(1, ni.Color(80, 180, 100));
-    ni.show();
-    
-     ni.setPixelColor(2, ni.Color(50, 10, 70));
-     ni.show();
-    
-     ni.setPixelColor(3, ni.Color(150, 0, 150));
-    ni.show();
-    
-    
-   // Serial monitor
+  // Serial monitor
   if (configureBT.available()) {
     Serial.write(configureBT.read());
   }
@@ -141,12 +131,6 @@ void loop()
   if (Serial.available()) {
     configureBT.write(Serial.read());
   }
-
-  // Sending
-
-
-
-  // Receiving
   
   // Start Debug line
   Serial.println("===============================================================");
@@ -189,24 +173,24 @@ void loop()
     if (lineReadData <= 2500)
     {
       actualSpeed = rotationSpeed;
-      rotateLeft();
+      rotateLeft(true);
     }
     else if (lineReadData >= 4500)
     {
       actualSpeed = rotationSpeed;
-      rotateRight();
+      rotateRight(true);
     }
     else
     {
       actualSpeed = driveSpeed;
-      driveFwd();
+      driveFwd(true);
     }
   }
   else // Cannot detect any lines
   {
     // Prefer left over right, so rotate right.
     actualSpeed = rotationSpeed;
-    rotateLeft();
+    rotateLeft(true);
   }
  
   // Divide Debug line
@@ -245,8 +229,13 @@ void closeGripper()
 }
 
 // Forward
-void driveFwd()
+void driveFwd(bool doLights)
 {
+  if (doLights)
+  {
+    neoBack(50, 0, 0);
+    neoFront(50, 50, 50);
+  }
   driveLeftWheel();
   driveRightWheel();
 }
@@ -264,8 +253,13 @@ void driveRightWheel()
 }
 
 // Backwards
-void driveBwd()
+void driveBwd(bool doLights)
 {
+  if (doLights)
+  {
+    neoBack(150, 0, 0);
+    neoFront(50, 50, 50);
+  }
   reverseLeftWheel();
   reverseRightWheel();
 }
@@ -281,8 +275,13 @@ void reverseRightWheel()
 }
 
 // Breaking
-void driveBreak()
+void driveBreak(bool doLights)
 {
+  if (doLights)
+  {
+    neoBack(150, 0, 0);
+    neoFront(150, 150, 150);
+  }
   breakLeftWheel();
   breakRightWheel();
 }
@@ -300,16 +299,86 @@ void breakRightWheel()
 }
 
 // Rotation
-void rotateRight()
+void rotateRight(bool doLights)
 {
-  driveBreak();
+  if (doLights)
+  {
+    neoRight(0, 0, 0);
+    neoLeft(150, 50, 0);
+  }
+  driveBreak(false);
   driveLeftWheel();
   reverseRightWheel();
 }
 
-void rotateLeft()
+void rotateLeft(bool doLights)
 {
-  driveBreak();
+  if (doLights)
+  {
+    neoRight(150, 50, 0);
+    neoLeft(0, 0, 0);
+  }
+  driveBreak(false);
   driveRightWheel();
   reverseLeftWheel();
+}
+
+// Neo Pixel
+void neoBack(int r, int g, int b)
+{
+  neoBackLeft(r,g,b);
+  neoBackRight(r,g,b);
+}
+
+void neoFront(int r, int g, int b)
+{
+  neoFrontLeft(r,g,b);
+  neoFrontRight(r,g,b);
+}
+
+void neoLeft(int r, int g, int b)
+{
+  neoBackLeft(r,g,b);
+  neoFrontLeft(r,g,b);
+}
+
+void neoRight(int r, int g, int b)
+{
+  neoBackRight(r,g,b);
+  neoFrontRight(r,g,b);
+}
+
+void neoBackLeft(int r, int g, int b)
+{
+  neoPixel.setPixelColor(1, neoPixel.Color(g, r, b));
+  neoPixel.show();
+}
+
+void neoBackRight(int r, int g, int b)
+{
+  neoPixel.setPixelColor(0, neoPixel.Color(g, r, b));
+  neoPixel.show();
+}
+
+void neoFrontLeft(int r, int g, int b)
+{
+  neoPixel.setPixelColor(2, neoPixel.Color(g, r, b));
+  neoPixel.show();
+}
+
+void neoFrontRight(int r, int g, int b)
+{
+  neoPixel.setPixelColor(3, neoPixel.Color(g, r, b));
+  neoPixel.show();
+}
+
+void neoClear()
+{
+  neoPixel.clear();
+  return;
+  neoPixel.setPixelColor(0, neoPixel.Color(0, 0, 0));
+  neoPixel.setPixelColor(1, neoPixel.Color(0, 0, 0));
+  neoPixel.setPixelColor(2, neoPixel.Color(0, 0, 0));
+  neoPixel.setPixelColor(3, neoPixel.Color(0, 0, 0));
+  neoPixel.show();
 }

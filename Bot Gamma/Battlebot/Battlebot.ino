@@ -41,6 +41,9 @@ int loopCounter;
 //rotatedLeftLast
 bool rotatedLeftLast;
 
+// Please remove
+bool haveFun = false;
+
 
 // Bluetooth
 SoftwareSerial configureBT(2, 4); // TX || RX
@@ -84,10 +87,10 @@ void setup()
     for (i = 0; i < calibrationTime; i++)
     {
       neoPixel.clear();
-        neoFrontLeft(random(150),random(150),random(150));
-        neoFrontRight(random(150),random(150),random(150));
-        neoBackLeft(random(150),random(150),random(150));
-        neoBackRight(random(150),random(150),random(150));
+      neoFrontLeft(random(150),random(150),random(150));
+      neoFrontRight(random(150),random(150),random(150));
+      neoBackLeft(random(150),random(150),random(150));
+      neoBackRight(random(150),random(150),random(150));
       driveBreak(false);
       if (i % 10 == 0)
       {
@@ -124,6 +127,25 @@ void setup()
 
 void loop()
 {
+  // Have fun toggle
+  if (digitalRead(8) == LOW)
+  {
+    haveFun = !haveFun;
+  }
+  if (haveFun)
+  {
+    neoPixel.clear();
+    neoFrontLeft(random(150),random(150),random(150));
+    neoFrontRight(random(150),random(150),random(150));
+    neoBackLeft(random(150),random(150),random(150));
+    neoBackRight(random(150),random(150),random(150));
+    actualSpeed = 255;
+    reverseLeftWheel();
+    driveRightWheel();
+    delay(20);
+  }
+  else
+  {
   // NEO clear
   neoClear();
     
@@ -174,13 +196,13 @@ void loop()
   // Control Wheels based on Distance
   if (lineReadData > 0)
   {
-    if (lineReadData <= 2500)
+    if (lineReadData <= 2250)
     {
       actualSpeed = rotationSpeed;
       rotateLeft(true);
       rotatedLeftLast = true;
     }
-    else if (lineReadData >= 4500)
+    else if (lineReadData >= 4750)
     {
       actualSpeed = rotationSpeed;
       rotateRight(true);
@@ -205,6 +227,7 @@ void loop()
 
   // Increment loop counter
   loopCounter += 1;
+  }
 }
 
 
@@ -281,12 +304,12 @@ void reverseRightWheel()
 }
 void slowLeftWheel()
 {
-  analogWrite(leftWheelFwd, actualSpeed / 10);
+  analogWrite(leftWheelFwd, actualSpeed / 3);
 }
 
 void slowRightWheel()
 {
-  analogWrite(rightWheelFwd, actualSpeed / 10);
+  analogWrite(rightWheelFwd, actualSpeed / 3);
 }
 
 // Breaking

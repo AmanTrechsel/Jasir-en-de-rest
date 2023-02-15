@@ -6,8 +6,8 @@
 
 //*****CONSTANSTS*****//
 
-const int gripper = 4; // the pin that is connected to the gripper
-const int scanner = 12;
+const int gripperPin = 4; // the pin that is connected to the gripper
+const int scannerPin = 12; // the pin that is connected tot the scanner servo
 const int trigPin = 7; // the pin that is connected to the trigger of the ultra sonic sensor
 const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
 const int motorA1 = 10; // the first pin that is connected to motor A (the left motor)
@@ -40,8 +40,8 @@ void setup() {
   pinMode(trigPin, OUTPUT); // sets the trigger pin as an output
   pinMode(echoPin, INPUT); // sets the echo pin as an input
   Serial.begin(9600); // starts the serial communication
-  myservo.attach(gripper); // attaches the gripper servo to pin 4
-  scanner.attach(scanner);
+  gripper.attach(gripperPin); // attaches the gripper servo to pin 4
+  scanner.attach(scannerPin);
   
   pinMode(motorA1, OUTPUT); // sets the motorA1 pin as output
   pinMode(motorA2, OUTPUT); // sets the motorA2 pin as output 
@@ -77,27 +77,45 @@ void echoSensor() {
 }
 
 void drive() {
+  frontScan();
+  delay(500);
   echoSensor();
   forward();
   if (distance <= 20) {
     brake();
     delay(500);
-    left();
-    delay(nintyDegreeTurn);
-    brake();
+    leftScan();
+    delay(500);
     echoSensor(); 
     delay(1000);  
-    if (distance <=15) {
-      right();
-      delay(oneEightyDegreeTurn);
-      brake();   
+    if (distance <= 15) {
+      rightScan(); 
+      delay(500); 
       echoSensor();
       delay(1000);
-      if (distance <=30) {
+      if (distance <= 15) {
         right();
         delay(nintyDegreeTurn);
         brake();
+        if (distance <= 15) {
+          right();
+          delay(nintyDegreeTurn);
+          brake();
+          delay(500);
+        }
       }
+      else {
+        right();
+        delay(nintyDegreeTurn);
+        brake();
+        delay(500);
+       } 
+     }
+     else {
+       left();
+       delay(nintyDegreeTurn);
+       brake();
+       delay(500);
     } 
   }
 
@@ -136,6 +154,18 @@ void brake() {
   digitalWrite(motorA2, HIGH);
   digitalWrite(motorB1, HIGH);
   digitalWrite(motorB2, HIGH);
+}
+
+void leftScan() {
+  scanner.write(180);
+}
+
+void rightScan() {
+  scanner.write(0);
+}
+
+void frontScan() {
+  scanner.write(100);
 }
 
 /* void counter1() {

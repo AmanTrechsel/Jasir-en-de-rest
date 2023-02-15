@@ -78,10 +78,9 @@ void echoSensor() {
 
 void drive() {
   frontScan();
-  delay(500);
   echoSensor();
   forward();
-  if (distance <= 20) {
+  if (distance <= 15) {
     brake();
     delay(500);
     leftScan();
@@ -97,12 +96,6 @@ void drive() {
         right();
         delay(nintyDegreeTurn);
         brake();
-        if (distance <= 15) {
-          right();
-          delay(nintyDegreeTurn);
-          brake();
-          delay(500);
-        }
       }
       else {
         right();

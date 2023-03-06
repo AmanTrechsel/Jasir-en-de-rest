@@ -20,8 +20,8 @@ const int leftWheelFwd = 11;
 const int leftWheelBwd = 6;
 const int rightWheelBwd = 5;
 const int rightWheelFwd = 3;
-const int rotationSpeed = 150; // Speed at which to rotate
-const int driveSpeed = 190; // Speed at which to drive
+const int rotationSpeed = 160; // Speed at which to rotate
+const int driveSpeed = 160; // Speed at which to drive
 int actualSpeed = 255; // The currently set speed to the motors
 
 // Sensors
@@ -53,7 +53,7 @@ Adafruit_NeoPixel neoPixel(4, 7, NEO_GRB + NEO_KHZ800);
 
 
 void setup()
-{  
+{    
   // Bluetooth setup 
   Serial.begin(9600);
   configureBT.begin(38400); 
@@ -77,7 +77,7 @@ void setup()
   
   // Initiate Serial
   Serial.begin(9600);
-
+  
   // Sensor Calibration
   if (shouldCalibrate)
   {
@@ -192,17 +192,17 @@ void loop()
     Serial.print("\t");
     if (i == 7) { Serial.println(""); }
   }
- 
+  
   // Control Wheels based on Distance
   if (lineReadData > 0)
   {
-    if (lineReadData <= 2250)
+    if (lineReadData <= 2000)
     {
       actualSpeed = rotationSpeed;
       rotateLeft(true);
       rotatedLeftLast = true;
     }
-    else if (lineReadData >= 4750)
+    else if (lineReadData >= 5000)
     {
       actualSpeed = rotationSpeed;
       rotateRight(true);
@@ -295,11 +295,13 @@ void driveBwd(bool doLights)
 
 void reverseLeftWheel()
 {
+  analogWrite(leftWheelFwd, 0);
   analogWrite(leftWheelBwd, actualSpeed);
 }
 
 void reverseRightWheel()
 {
+  analogWrite(rightWheelFwd, 0);
   analogWrite(rightWheelBwd, actualSpeed);
 }
 void slowLeftWheel()
@@ -346,7 +348,7 @@ void rotateRight(bool doLights)
   }
   driveBreak(false);
   driveLeftWheel();
-  slowRightWheel();
+  reverseRightWheel();
 }
 
 void rotateLeft(bool doLights)
@@ -358,7 +360,7 @@ void rotateLeft(bool doLights)
   }
   driveBreak(false);
   driveRightWheel();
-  slowLeftWheel();
+  reverseLeftWheel();
 }
 
 // Neo Pixel

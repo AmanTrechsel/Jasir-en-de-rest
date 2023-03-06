@@ -196,23 +196,11 @@ void loop()
   // Control Wheels based on Distance
   if (lineReadData > 0)
   {
-    if (lineReadData <= 2000)
-    {
-      actualSpeed = rotationSpeed;
-      rotateLeft(true);
-      rotatedLeftLast = true;
-    }
-    else if (lineReadData >= 5000)
-    {
-      actualSpeed = rotationSpeed;
-      rotateRight(true);
-      rotatedLeftLast = false;
-    }
-    else
-    {
-      actualSpeed = driveSpeed;
-      driveFwd(true);
-    }
+    analogWrite(leftWheelFwd, getFactor(lineReadData, false));
+    analogWrite(leftWheelBwd, 0);
+    analogWrite(rightWheelFwd, getFactor(lineReadData, true));
+    analogWrite(rightWheelBwd, 0);
+    if (lineReadData < 7000) { rotatedLeftLast = lineReadData < 3500; }
   }
   else // Cannot detect any lines
   {
@@ -230,6 +218,41 @@ void loop()
   }
 }
 
+int getFactor(int line, bool is_left)
+{
+  if ((is_left && line <= 1500) || (!is_left && line >= 5500))
+  {
+    return 255;
+  }
+  else if ((is_left && line <= 3500) || (!is_left && line >= 3500))
+  {
+    return 220;
+  }
+  else if ((is_left && line <= 4500) || (!is_left && line >= 2500))
+  {
+    return 150;
+  }
+  else if ((is_left && line <= 5000) || (!is_left && line >= 2000))
+  {
+    return 120;
+  }
+  else if ((is_left && line <= 5500) || (!is_left && line >= 1500))
+  {
+    return 100;
+  }
+  else if ((is_left && line <= 6000) || (!is_left && line >= 1000))
+  {
+    return 80;
+  }
+  else if ((is_left && line <= 6500) || (!is_left && line >= 500))
+  {
+    return 50;
+  }
+  else
+  {
+    return 20;
+  }
+}
 
 // Calculate Distance
 int getDistance()

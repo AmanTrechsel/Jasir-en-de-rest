@@ -20,8 +20,8 @@ const int leftWheelFwd = 11;
 const int leftWheelBwd = 6;
 const int rightWheelBwd = 5;
 const int rightWheelFwd = 3;
-const int rotationSpeed = 150; // Speed at which to rotate
-const int driveSpeed = 190; // Speed at which to drive
+const int rotationSpeed = 160; // Speed at which to rotate
+const int driveSpeed = 160; // Speed at which to drive
 int actualSpeed = 255; // The currently set speed to the motors
 
 // Sensors
@@ -53,7 +53,7 @@ Adafruit_NeoPixel neoPixel(4, 7, NEO_GRB + NEO_KHZ800);
 
 
 void setup()
-{  
+{    
   // Bluetooth setup 
   Serial.begin(9600);
   configureBT.begin(38400); 
@@ -77,7 +77,7 @@ void setup()
   
   // Initiate Serial
   Serial.begin(9600);
-
+  
   // Sensor Calibration
   if (shouldCalibrate)
   {
@@ -192,27 +192,15 @@ void loop()
     Serial.print("\t");
     if (i == 7) { Serial.println(""); }
   }
- 
+  
   // Control Wheels based on Distance
   if (lineReadData > 0)
   {
-    if (lineReadData <= 2250)
-    {
-      actualSpeed = rotationSpeed;
-      rotateLeft(true);
-      rotatedLeftLast = true;
-    }
-    else if (lineReadData >= 4750)
-    {
-      actualSpeed = rotationSpeed;
-      rotateRight(true);
-      rotatedLeftLast = false;
-    }
-    else
-    {
-      actualSpeed = driveSpeed;
-      driveFwd(true);
-    }
+    analogWrite(leftWheelFwd, getFactor(lineReadData, false));
+    analogWrite(leftWheelBwd, 0);
+    analogWrite(rightWheelFwd, getFactor(lineReadData, true));
+    analogWrite(rightWheelBwd, 0);
+    if (lineReadData < 7000) { rotatedLeftLast = lineReadData < 3500; }
   }
   else // Cannot detect any lines
   {
@@ -230,6 +218,41 @@ void loop()
   }
 }
 
+int getFactor(int line, bool is_left)
+{
+  if ((is_left && line <= 1500) || (!is_left && line >= 5500))
+  {
+    return 255;
+  }
+  else if ((is_left && line <= 3500) || (!is_left && line >= 3500))
+  {
+    return 220;
+  }
+  else if ((is_left && line <= 4500) || (!is_left && line >= 2500))
+  {
+    return 150;
+  }
+  else if ((is_left && line <= 5000) || (!is_left && line >= 2000))
+  {
+    return 120;
+  }
+  else if ((is_left && line <= 5500) || (!is_left && line >= 1500))
+  {
+    return 100;
+  }
+  else if ((is_left && line <= 6000) || (!is_left && line >= 1000))
+  {
+    return 80;
+  }
+  else if ((is_left && line <= 6500) || (!is_left && line >= 500))
+  {
+    return 50;
+  }
+  else
+  {
+    return 20;
+  }
+}
 
 // Calculate Distance
 int getDistance()
@@ -295,11 +318,13 @@ void driveBwd(bool doLights)
 
 void reverseLeftWheel()
 {
+  analogWrite(leftWheelFwd, 0);
   analogWrite(leftWheelBwd, actualSpeed);
 }
 
 void reverseRightWheel()
 {
+  analogWrite(rightWheelFwd, 0);
   analogWrite(rightWheelBwd, actualSpeed);
 }
 void slowLeftWheel()
@@ -346,7 +371,7 @@ void rotateRight(bool doLights)
   }
   driveBreak(false);
   driveLeftWheel();
-  slowRightWheel();
+  reverseRightWheel();
 }
 
 void rotateLeft(bool doLights)
@@ -358,7 +383,7 @@ void rotateLeft(bool doLights)
   }
   driveBreak(false);
   driveRightWheel();
-  slowLeftWheel();
+  reverseLeftWheel();
 }
 
 // Neo Pixel

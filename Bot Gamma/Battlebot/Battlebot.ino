@@ -37,7 +37,7 @@ int lineReadData; // Value depending on where the sensor is detecting a line
                   // 0 means no line is detected; 7000 means everything is detecting.
 
 // Sensor Calibration
-const int calibrationTime = 250; // in milliseconds * 20 (50 = 1 second)
+const int calibrationTime = 15; // in milliseconds * 20 (50 = 1 second)
 const bool shouldCalibrate = true;
 
 // Loop Counter
@@ -85,6 +85,7 @@ void setup()
   {
     
     int i;
+    driveFwd(false);
     for (i = 0; i < calibrationTime; i++)
     {
       neoPixel.clear();
@@ -92,22 +93,15 @@ void setup()
       neoFrontRight(random(150),random(150),random(150));
       neoBackLeft(random(150),random(150),random(150));
       neoBackRight(random(150),random(150),random(150));
-      driveBreak(false);
-      if (i % 10 == 0)
-      {
-        (i % 20 == 0) ? rotateLeft(false) : rotateRight(false);
-      }
-      else if (i % 15 == 0)
-      {
-        (i % 30 == 0) ? rotateLeft(false) : rotateRight(false); 
-      }
-      if ((i % 100 == 0 || i == 150) && i > 0)
-      {
-      
-      }
       qtr.calibrate();
       delay(20);
     }
+
+    driveBreak(false);
+    rotateLeft(true);
+    delay(500);
+    driveFwd(true);
+    delay(250);
     
     // Calibration
 
@@ -185,9 +179,27 @@ void loop()
   m1Speed = min(max(m1Speed, 0), 255);
   m2Speed = min(max(m2Speed, 0), 255);
 
-  // Let bot drive
+  // starting
   analogWrite(leftWheelFwd, m1Speed);
   analogWrite(rightWheelFwd, m2Speed);
+
+  // finish line
+  if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] > 980))
+  {
+    driveBreak(true);
+    delay(400);
+    reverseLeftWheel();
+    reverseRightWheel();
+    delay(400);
+    driveBreak(true);
+    delay(400);
+    haveFun = true;
+  }
+  else
+  {
+    analogWrite(leftWheelFwd, m1Speed);
+    analogWrite(rightWheelFwd, m2Speed);
+  }
  
  
   // Increment loop counter

@@ -1,6 +1,5 @@
 // Libraries
 #include <QTRSensors.h>
-#include <SoftwareSerial.h>
 #include <Adafruit_NeoPixel.h>
 
 
@@ -8,6 +7,12 @@
 const int gripper = 10;
 const int closedAngle = 180;
 const int openedAngle = 130;
+
+// PID constants
+const float KP = 0.225;
+const float KD = 2.25;
+
+int lastError = 0;
 
 // Clicker
 const int echo = 12; // Speaker
@@ -46,7 +51,7 @@ bool haveFun = false;
 
 
 // Bluetooth
-SoftwareSerial configureBT(2, 4); // TX || RX
+
 
 // NEO PIXELS
 Adafruit_NeoPixel neoPixel(4, 7, NEO_GRB + NEO_KHZ800);
@@ -54,9 +59,7 @@ Adafruit_NeoPixel neoPixel(4, 7, NEO_GRB + NEO_KHZ800);
 
 void setup()
 {    
-  // Bluetooth setup 
-  Serial.begin(9600);
-  configureBT.begin(38400); 
+
 
   // NEO setup
   neoPixel.begin();
@@ -75,15 +78,13 @@ void setup()
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]) {A6,A0,A7,A1,A2,A3,A4,A5},8);
   
-  // Initiate Serial
-  Serial.begin(9600);
+ 
   
   // Sensor Calibration
   if (shouldCalibrate)
   {
+    
     int i;
-    Serial.println("");
-    Serial.print("Calibrating");
     for (i = 0; i < calibrationTime; i++)
     {
       neoPixel.clear();
@@ -102,13 +103,14 @@ void setup()
       }
       if ((i % 100 == 0 || i == 150) && i > 0)
       {
-        Serial.print(".");
+      
       }
       qtr.calibrate();
       delay(20);
     }
-    Serial.println("");
-    Serial.println("Calibration complete");
+    
+    // Calibration
+
   }
 
   // Initiate Gripper
@@ -141,7 +143,7 @@ void loop()
     neoBackRight(random(150),random(150),random(150));
     actualSpeed = 255;
     reverseLeftWheel();
-    driveRightWheel();
+    driveRightWheel(actualSpeed);
     delay(20);
   }
   else
@@ -149,30 +151,11 @@ void loop()
   // NEO clear
   neoClear();
     
-  // Serial monitor
-  if (configureBT.available()) {
-    Serial.write(configureBT.read());
   }
-  
-  if (Serial.available()) {
-    configureBT.write(Serial.read());
-  }
-  
-  // Start Debug line
-  Serial.println("===============================================================");
-  Serial.println("");
 
   // Get the distance to anything in front of it
   distance = getDistance();
   
-  // Output Distance
-  Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.println("cm");
-
-  // Divide Debug line
-  Serial.println("-----------------------------------------------------");
-  Serial.println("");
 
   // Control Gripper based on Distance
   if (distance < 5)
@@ -186,71 +169,64 @@ void loop()
 
   // Check the sensors and output the values
   lineReadData = qtr.readLineBlack(sensors);
-  for (uint16_t i = 0; i < 8; i++)
-  {
-    Serial.print(sensors[i]);
-    Serial.print("\t");
-    if (i == 7) { Serial.println(""); }
-  }
-  
-  // Control Wheels based on Distance
-  if (lineReadData > 0)
-  {
-    analogWrite(leftWheelFwd, getFactor(lineReadData, false));
-    analogWrite(leftWheelBwd, 0);
-    analogWrite(rightWheelFwd, getFactor(lineReadData, true));
-    analogWrite(rightWheelBwd, 0);
-    if (lineReadData < 7000) { rotatedLeftLast = lineReadData < 3500; }
-  }
-  else // Cannot detect any lines
-  {
-    // Prefer left over right, so rotate right.
-    actualSpeed = rotationSpeed;
-    (rotatedLeftLast ? rotateLeft(true) : rotateRight(true));
-  }
- 
-  // Divide Debug line
-  Serial.println("-----------------------------------------------------");
-  Serial.println("");
 
+
+  // Calculating turns
+  int error = lineReadData - 3500;
+
+  int motorSpeed = KP * error + KD * (error - lastError);
+  lastError = error;
+
+  // Calculating motor speeds
+  int m1Speed = 255 + motorSpeed;
+  int m2Speed = 255 - motorSpeed;
+
+  // Min and max speeds 
+  m1Speed = min(max(m1Speed, 0), 255);
+  m2Speed = min(max(m2Speed, 0), 255);
+
+  // Let bot drive
+  analogWrite(leftWheelFwd, m1Speed);
+  analogWrite(rightWheelFwd, m2Speed);
+ 
+ 
   // Increment loop counter
   loopCounter += 1;
-  }
 }
 
 int getFactor(int line, bool is_left)
 {
   if ((is_left && line <= 1500) || (!is_left && line >= 5500))
   {
-    return 255;
+    return 200;
   }
   else if ((is_left && line <= 3500) || (!is_left && line >= 3500))
   {
-    return 220;
+    return 180;
   }
   else if ((is_left && line <= 4500) || (!is_left && line >= 2500))
   {
-    return 150;
+    return 170;
   }
   else if ((is_left && line <= 5000) || (!is_left && line >= 2000))
   {
-    return 120;
+    return 180;
   }
   else if ((is_left && line <= 5500) || (!is_left && line >= 1500))
   {
-    return 100;
+    return 170;
   }
   else if ((is_left && line <= 6000) || (!is_left && line >= 1000))
   {
-    return 80;
+    return 180;
   }
   else if ((is_left && line <= 6500) || (!is_left && line >= 500))
   {
-    return 50;
+    return 170;
   }
   else
   {
-    return 20;
+    return 80;
   }
 }
 
@@ -288,20 +264,20 @@ void driveFwd(bool doLights)
     neoBack(50, 0, 0);
     neoFront(50, 50, 50);
   }
-  driveLeftWheel();
-  driveRightWheel();
+  driveLeftWheel(actualSpeed);
+  driveRightWheel(actualSpeed);
 }
 
-void driveLeftWheel()
+void driveLeftWheel(int speed)
 {
   analogWrite(leftWheelBwd, 0);
-  analogWrite(leftWheelFwd, actualSpeed);
+  analogWrite(leftWheelFwd, speed);
 }
 
-void driveRightWheel()
+void driveRightWheel(int speed)
 {
   analogWrite(rightWheelBwd, 0);
-  analogWrite(rightWheelFwd, actualSpeed);
+  analogWrite(rightWheelFwd, speed);
 }
 
 // Backwards
@@ -370,7 +346,7 @@ void rotateRight(bool doLights)
     neoLeft(150, 50, 0);
   }
   driveBreak(false);
-  driveLeftWheel();
+  driveLeftWheel(actualSpeed);
   reverseRightWheel();
 }
 
@@ -382,7 +358,7 @@ void rotateLeft(bool doLights)
     neoLeft(0, 0, 0);
   }
   driveBreak(false);
-  driveRightWheel();
+  driveRightWheel(actualSpeed);
   reverseLeftWheel();
 }
 

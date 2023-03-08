@@ -1,11 +1,13 @@
 // Libraries
 #include <QTRSensors.h>
+#include <Servo.h>
 
 // Constants
 const int leftWheelFwd = 11; // Links, vooruit
 const int leftWheelBwd = 10; // Links, achteruit
 const int rightWheelFwd = 9; // Rechts, achteruit
 const int rightWheelBwd = 6; // Rechts, vooruit
+const int gripperPin = 4; // Gripper
 
 // PID constants
 const float KP = 0.225;
@@ -26,6 +28,10 @@ QTRSensors qtr;
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
+// Gripper
+Servo myGripper;
+int pos = 0;
+
 void setup() 
 {
   // Sensors configuration
@@ -42,6 +48,7 @@ void setup()
       delay(10);
       qtr.calibrate();
       delay(10);
+      myGripper.write(10); 
     }
   }
 
@@ -50,6 +57,9 @@ void setup()
   pinMode(leftWheelBwd, OUTPUT);
   pinMode(rightWheelFwd, OUTPUT);
   pinMode(rightWheelBwd, OUTPUT);
+
+  // Gripper configuration
+  myGripper.attach(4);
 }
 
 void loop()
@@ -79,6 +89,8 @@ void loop()
   {
     analogWrite(leftWheelFwd, 0);
     analogWrite(rightWheelFwd, 0);
+    delay(50);
+    myGripper.write(160); 
   }
 }
 
@@ -86,4 +98,10 @@ void slowGoForward()
 {
   analogWrite(leftWheelFwd, 200);
   analogWrite(rightWheelFwd, 200);
+}
+
+void goForward()
+{
+  analogWrite(leftWheelFwd, 255);
+  analogWrite(rightWheelFwd, 255);
 }

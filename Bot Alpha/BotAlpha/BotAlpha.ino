@@ -1,251 +1,107 @@
 // Libraries
-#include <SoftwareSerial.h>
 #include <QTRSensors.h>
+#include <Servo.h>
 
-// Motor
+// Constants
 const int leftWheelFwd = 11; // Links, vooruit
 const int leftWheelBwd = 10; // Links, achteruit
 const int rightWheelFwd = 9; // Rechts, achteruit
 const int rightWheelBwd = 6; // Rechts, vooruit
-const int rotationSpeed = 110; // Speed at which to rotate
-const int driveSpeed = 210; // Speed at which to drive
-const int trigPin = 7; // de pin dat is verbonden met de ultra sonic sensor
-const int echoPin = 8; // the pin dat is verbonden met de echo van de ultra sonic sensor
-int actualSpeed = 255; // de actuele snelheid van de motor
-int duration; // tijd hoelang het duurt
-int distance; // afstand 
+const int gripperPin = 4; // Gripper
+
+// PID constants
+const float KP = 0.225;
+const float KD = 2.25;
+
+int lastError = 0;
+
+// Base motor speed
+const int M1 = 255;
+const int M2 = 255;
+
+// Sensor Calibration
+const int calibrationTime = 20; // in milliseconds * 20 (50 = 1 second)
+const bool shouldCalibrate = true;
 
 // Sensors
 QTRSensors qtr;
-uint16_t sensors[8];
-int lineReadData; // Value depending on where the sensor is detecting a line
-                  // A value closer to 0 is more left; closer to 7000 is more right; 3500 is center
-                  // 0 means no line is detected; 7000 means everything is detecting.
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
 
-// Sensor Calibration
-const int calibrationTime = 75; // in milliseconds * 20 (50 = 1 second)
-const bool shouldCalibrate = true;
+// Gripper
+Servo myGripper;
+int pos = 0;
 
-// Bluetooth configuration
-SoftwareSerial configureBT(3, 2); // TX || RX, in feite zijn dit de pinmodes
-
-void setup() {
-  // Bluetooth setup 
-  Serial.begin(38400);
-  configureBT.begin(9600); // Indien je commands wilt uitvoeren, knop op module ingedrukt houden bij het inpluggen en 9600 aanpassen naar 38400
-
-  // Echo sensor 
-  pinMode(trigPin, OUTPUT); // zet de trigger pin op een output
-  pinMode(echoPin, INPUT); // zet de echo pin op input
-
-    // Wheels
-  pinMode(leftWheelFwd, OUTPUT);
-  pinMode(leftWheelBwd, OUTPUT);
-  pinMode(rightWheelFwd, OUTPUT);
-  pinMode(rightWheelBwd, OUTPUT);
-
-  // Line Sensor
+void setup() 
+{
+  // Sensors configuration
   qtr.setTypeAnalog();
-  qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7},8);
-  
-  // Initiate Serial
-  Serial.begin(9600);
+  qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
 
   // Sensor Calibration
   if (shouldCalibrate)
   {
     int i;
-    Serial.println("");
-    Serial.print("Calibrating");
     for (i = 0; i < calibrationTime; i++)
     {
-      driveBreak();
-      driveFwd();
+      slowGoForward();
       delay(10);
-      slowDriveFwd();
       qtr.calibrate();
       delay(10);
-    }
-    Serial.println("");
-    Serial.println("Calibration complete");
-  }
-}
-
-void loop() {
-  echoSensor(); 
-  if (configureBT.available()) {
-    Serial.write(configureBT.read());
-  }
-  
-  if (Serial.available()) {
-    configureBT.write(Serial.read());
-  }
-
-    // Start Debug line
-  Serial.println("===============================================================");
-  Serial.println("");
-
-  // Divide Debug line
-  Serial.println("-----------------------------------------------------");
-  Serial.println("");
-
-  // Check the sensors and output the values
-  lineReadData = qtr.readLineBlack(sensors);
-  for (uint16_t i = 0; i < 8; i++)
-  {
-    Serial.print(sensors[i]);
-    Serial.print("\t");
-    if (i == 7) { Serial.println(lineReadData); }
-  }
-  if (distance <=16)
-  {
-    actualSpeed = rotationSpeed;
-    rotateRight();
-    delay(1000);
-    driveFwd();
-    delay(1400);
-    rotateLeft();
-    delay(1000);
-    driveFwd();
-    delay(1400);
-    
-    
-  }
-  else{
-  
-  // Control Wheels based on Distance
-  if (lineReadData > 0)
-  {
-    if (lineReadData <= 2380)
-    {
-      actualSpeed = rotationSpeed;
-      rotateLeft();
-    }
-    else if (lineReadData >= 4250)
-    {
-      actualSpeed = rotationSpeed;
-      rotateRight();
-    }
-    else
-    {
-      actualSpeed = driveSpeed;
-      driveFwd();
+      myGripper.write(10); 
     }
   }
-  else // Cannot detect any lines
+
+  // Wheels configuration
+  pinMode(leftWheelFwd, OUTPUT);
+  pinMode(leftWheelBwd, OUTPUT);
+  pinMode(rightWheelFwd, OUTPUT);
+  pinMode(rightWheelBwd, OUTPUT);
+
+  // Gripper configuration
+  myGripper.attach(4);
+}
+
+void loop()
+{
+  // Read sensor
+  uint16_t position = qtr.readLineBlack(sensorValues);
+
+  // Calculating turns
+  int error = position - 3500;
+  int motorSpeed = KP * error + KD * (error - lastError);
+  lastError = error;
+
+  // Calculating motor speeds
+  int m1Speed = M1 + motorSpeed;
+  int m2Speed = M2 - motorSpeed;
+
+  // Min and max speeds 
+  m1Speed = min(max(m1Speed, 0), 255);
+  m2Speed = min(max(m2Speed, 0), 255);
+
+  // Let bot drive
+  analogWrite(leftWheelFwd, m1Speed);
+  analogWrite(rightWheelFwd, m2Speed);
+
+  // Stop when all sensors detect black
+  if((sensorValues[0] > 980) && (sensorValues[1] > 980) && (sensorValues[2] > 980) && (sensorValues[3] > 980) && (sensorValues[4] > 980) && (sensorValues[5] > 980) && (sensorValues[6] > 980) && (sensorValues[7] > 980))
   {
-    // Prefer left over right, so rotate right.
-    actualSpeed = rotationSpeed;
-    rotateLeft();
+    analogWrite(leftWheelFwd, 0);
+    analogWrite(rightWheelFwd, 0);
+    delay(50);
+    myGripper.write(160); 
   }
-  }
- 
-  // Divide Debug line
-  Serial.println("-----------------------------------------------------");
-  Serial.println("");
-  
 }
 
-// Forward
-void driveFwd()
+void slowGoForward()
 {
-  driveLeftWheel();
-  driveRightWheel();
+  analogWrite(leftWheelFwd, 200);
+  analogWrite(rightWheelFwd, 200);
 }
 
-void driveLeftWheel()
+void goForward()
 {
-  analogWrite(leftWheelBwd, 0);
-  analogWrite(leftWheelFwd, actualSpeed);
-}
-
-void driveRightWheel()
-{
-  analogWrite(rightWheelBwd, 0);
-  analogWrite(rightWheelFwd, actualSpeed);
-}
-
-void slowDriveFwd()
-{
-  rightSlowWheelFwd();
-  leftSlowWheelFwd();
-}
-
-void leftSlowWheelFwd()
-{
-  analogWrite(rightWheelBwd, 0);
-  analogWrite(leftWheelFwd, 50);
-}
-
-void rightSlowWheelFwd()
-{
-  analogWrite(leftWheelBwd, 0);
-  analogWrite(rightWheelFwd, 40);
-}
-
-// Backwards
-void driveBwd()
-{
-  reverseLeftWheel();
-  reverseRightWheel();
-}
-
-void reverseLeftWheel()
-{
-  analogWrite(leftWheelBwd, actualSpeed);
-}
-
-void reverseRightWheel()
-{
-  analogWrite(rightWheelBwd, actualSpeed);
-}
-
-// Breaking
-void driveBreak()
-{
-  breakLeftWheel();
-  breakRightWheel();
-}
-
-void breakLeftWheel()
-{
-  analogWrite(leftWheelFwd, 50);
-  analogWrite(leftWheelBwd, 50);
-}
-
-void breakRightWheel()
-{
-  analogWrite(rightWheelFwd, 50);
-  analogWrite(rightWheelBwd, 50);
-}
-
-// Rotation
-void rotateRight()
-{
-  driveBreak();
-  driveLeftWheel();
-  reverseRightWheel();
-}
-
-void rotateLeft()
-{
-  driveBreak();
-  driveRightWheel();
-  reverseLeftWheel();
-}
-
-// echo sensor
-void echoSensor() 
-{
-  digitalWrite(trigPin, LOW);
-  
-  digitalWrite(trigPin, HIGH);
-  digitalWrite(trigPin, LOW);
-
-  duration = pulseIn(echoPin, HIGH);
-
-  distance = duration * 0.034 / 2;
-
-  Serial.print("distance: ");
-  Serial.println(distance);
+  analogWrite(leftWheelFwd, 255);
+  analogWrite(rightWheelFwd, 255);
 }

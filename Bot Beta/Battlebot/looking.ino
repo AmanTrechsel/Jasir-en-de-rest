@@ -1,17 +1,17 @@
 //*****LIBRARIES*****//
 
-#include <Servo.h>
-#include <FastLED.h>
+//#include <Servo.h>
+//#include <FastLED.h>
 
 
 //*******************//
-#define LED_PIN 11
-#define NUM_LEDS 4
+//#define LED_PIN 11
+//#define NUM_LEDS 4
 
-CRGB leds[NUM_LEDS];
+//CRGB leds[NUM_LEDS];
 //*****CONSTANSTS*****//
 
-const int gripperPin = 4; // the pin that is connected to the gripper
+/*const int gripperPin = 4; // the pin that is connected to the gripper
 const int scannerPin = 12; // the pin that is connected tot the scanner servo
 const int trigPin = 7; // the pin that is connected to the trigger of the ultra sonic sensor
 const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
@@ -23,21 +23,21 @@ const int sensorMotorA = 2; // rotation sensor for motor A (the left motor)
 const int sensorMotorB = 3; // rotation sensor for motor B (the right motor)
 const int numberOfHoles = 20; // number of holes in the speed sensors
 const int nintyDegreeTurn = 400; // the amount of time the wheels need to work for a 90 degree turn
-const int oneEightyDegreeTurn = 700; // the amount of time the wheels need to work for a 180 degree turn
+const int oneEightyDegreeTurn = 700; // the amount of time the wheels need to work for a 180 degree turn*/
 
 //*******************//
 
 //*****VARIABLES*****//
 
-long duration; // the time it takes for the echo to be detected
+/*long duration; // the time it takes for the echo to be detected
 int distance; // the distance between the sensor and the object
 int pos = 0; 
 int counter1 = 0;
-int counter2= 0;
+int counter2= 0;*/
 
 //*******************//
 
-Servo gripper ;
+/*Servo gripper ;
 Servo scanner ;
 
 
@@ -202,7 +202,7 @@ void lightsMiddle(){
     leds[2] = CRGB(255, 100, 0);
     leds[3] = CRGB(255, 100, 0);
     FastLED.show();
-}
+}*/
 
 /* void counter1() {
   counter1++;

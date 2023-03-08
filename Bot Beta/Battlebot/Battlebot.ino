@@ -1,117 +1,125 @@
-//*****LIBRARIES*****//
 
-#include <Servo.h>
+//#include <FastLED.h>
 
-//*******************//
+//#define LED_PIN 11
+//#define NUM_LEDS 4
 
-//*****CONSTANSTS*****//
+//CRGB leds[NUM_LEDS];
 
-const int gripperPin = 4; // the pin that is connected to the gripper
-const int scannerPin = 12; // the pin that is connected tot the scanner servo
-const int trigPin = 7; // the pin that is connected to the trigger of the ultra sonic sensor
-const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
 const int motorA1 = 10; // the first pin that is connected to motor A (the left motor)
 const int motorA2 = 9; // the second pin that is connected to motor A (the left motor)
 const int motorB1 = 6; // the first pin that is connected to motor B (the right motor)
 const int motorB2 = 5; // the second pin that is connected to motor B (the right motor)
-const int sensorMotorA = 2; // rotation sensor for motor A (the left motor)
-const int sensorMotorB = 3; // rotation sensor for motor B (the right motor)
-const int numberOfHoles = 20; // number of holes in the speed sensors
-const int nintyDegreeTurn = 400; // the amount of time the wheels need to work for a 90 degree turn
-const int oneEightyDegreeTurn = 700; // the amount of time the wheels need to work for a 180 degree turn
-
-//*******************//
-
-//*****VARIABLES*****//
-
+const int sensorMotor1 = 3; // rotation sensor for motor B (the right motor)
+const int sensorMotor2 = 2; // rotation sensor for motor A (the left motor)
+const int scanner = 12; // servo under the echoSensor
+const int trigPin = 7; // the pin that is connected to the trigger of the ultra sonic sensor
+const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
+const int servoRight = 550;
+const int servoCenter = 1600;
+const int servoLeft = 2550;
+int counter1 = 0;
+int counter2 = 0;
+int pos = 0;
 long duration; // the time it takes for the echo to be detected
 int distance; // the distance between the sensor and the object
-int pos = 0; 
-int counter1 = 0;
-int counter2= 0;
-
-//*******************//
-
-Servo gripper ;
-Servo scanner ;
 
 
 void setup() {
+  pinMode(sensorMotor1, INPUT);
+  pinMode(sensorMotor2, INPUT);
   pinMode(trigPin, OUTPUT); // sets the trigger pin as an output
   pinMode(echoPin, INPUT); // sets the echo pin as an input
-  Serial.begin(9600); // starts the serial communication
-  gripper.attach(gripperPin); // attaches the gripper servo to pin 4
-  scanner.attach(scannerPin);
-  
-  pinMode(motorA1, OUTPUT); // sets the motorA1 pin as output
-  pinMode(motorA2, OUTPUT); // sets the motorA2 pin as output 
-  pinMode(motorB1, OUTPUT); // sets the motorB1 pin as output
-  pinMode(motorB2, OUTPUT); // sets the motorB2 pin as output
-  //pinMode(sensorMotorA, INPUT);
-  //pinMode(sensorMotorB, INPUT);
-  //attachInterrupt(digitalPinToInterrupt(sensorMotorA), counter1, CHANGE);
-  //attachInterrupt(digitalPinToInterrupt(sensorMotorB), counter2, CHANGE);
-  
+  pinMode(scanner, OUTPUT);
+  Serial.begin(9600);
+  attachInterrupt(digitalPinToInterrupt(sensorMotor1), count1, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(sensorMotor2), count2, CHANGE);
+
+ // FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS);
+ // FastLED.setMaxPowerInVoltsAndMilliamps(5, 500);
+ // FastLED.clear();
+ // FastLED.show();
 }
 
-void loop () {
- 
-   drive();
-  
-}
+void loop() {
 
-void echoSensor() {
-  digitalWrite(trigPin, LOW);
-  delay(2);
-  
-  digitalWrite(trigPin, HIGH);
-  delay(500);
-  digitalWrite(trigPin, LOW);
+  //2550 for left
+  //1600 for front
+  //550 for right
 
-  duration = pulseIn(echoPin, HIGH);
-
-  distance = duration * 0.034 / 2;
-
-  Serial.print("distance: ");
-  Serial.println(distance);
-}
-
-void drive() {
   frontScan();
   echoSensor();
   forward();
+
   if (distance <= 15) {
     brake();
-    delay(500);
     leftScan();
-    delay(500);
-    echoSensor(); 
-    delay(1000);  
+    delay(800);
+    echoSensor();
+    delay(
     if (distance <= 15) {
-      rightScan(); 
-      delay(500); 
+      rightScan();
+      delay(800);
       echoSensor();
-      delay(1000);
       if (distance <= 15) {
+        counter1 = 0;
+        counter2 = 0;
         right();
-        delay(nintyDegreeTurn);
-        brake();
+        if (counter2 >= 32) {
+          digitalWrite(motorA1, HIGH);
+          digitalWrite(motorA2, HIGH);
+        }
+        if (counter1 >= 32) {
+          digitalWrite(motorB1, HIGH);
+          digitalWrite(motorB2, HIGH);
+        }
       }
       else {
+        counter1 = 0;
+        counter2 = 0;
         right();
-        delay(nintyDegreeTurn);
-        brake();
-        delay(500);
-       } 
-     }
-     else {
-       left();
-       delay(nintyDegreeTurn);
-       brake();
-       delay(500);
-    } 
-  }
+        if (counter2 >= 20) {
+          digitalWrite(motorA1, HIGH);
+          digitalWrite(motorA2, HIGH);
+        }
+        if (counter1 >= 20) {
+          digitalWrite(motorB1, HIGH);
+          digitalWrite(motorB2, HIGH);
+        }
+      }
+    }
+    else {
+      counter1 = 0;
+      counter2 = 0;
+      left();
+      if (counter2 >= 20) {
+          digitalWrite(motorA1, HIGH);
+          digitalWrite(motorA2, HIGH);
+        }
+        if (counter1 >= 20) {
+          digitalWrite(motorB1, HIGH);
+          digitalWrite(motorB2, HIGH);
+        } 
+    }
+  } 
+}
 
+void echoSensor () {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+}
+
+void count1() {
+  counter1++;
+}
+
+void count2() {
+  counter2++;
 }
 
 void forward() {
@@ -128,6 +136,34 @@ void backward() {
   digitalWrite(motorB2, LOW);
 }
 
+void brake() {
+  digitalWrite(motorA1, HIGH);
+  digitalWrite(motorA2, HIGH);
+  digitalWrite(motorB1, HIGH);
+  digitalWrite(motorB2, HIGH);
+}
+
+void leftScan () {
+  digitalWrite(scanner, HIGH);
+  delayMicroseconds(servoLeft);
+  digitalWrite(scanner, LOW);
+  delayMicroseconds(18550);
+}
+
+void rightScan () {
+  digitalWrite(scanner, HIGH);
+  delayMicroseconds(servoRight);
+  digitalWrite(scanner, LOW);
+  delayMicroseconds(18550);
+}
+
+void frontScan() {
+  digitalWrite(scanner, HIGH);
+  delayMicroseconds(servoCenter);
+  digitalWrite(scanner, LOW);
+  delayMicroseconds(1550);
+}
+
 void left() {
   digitalWrite(motorA1, HIGH);
   digitalWrite(motorA2, LOW);
@@ -142,29 +178,30 @@ void right() {
   digitalWrite(motorB2, LOW);
 }
 
-void brake() {
-  digitalWrite(motorA1, HIGH);
-  digitalWrite(motorA2, HIGH);
-  digitalWrite(motorB1, HIGH);
-  digitalWrite(motorB2, HIGH);
+/*void lightsGood(){
+    FastLED.setBrightness(255);
+    leds[0] = CRGB(0, 255, 0);
+    leds[1] = CRGB(0, 255, 0);
+    leds[2] = CRGB(0, 255, 0);
+    leds[3] = CRGB(0, 255, 0);
+    FastLED.show();
+   
 }
 
-void leftScan() {
-  scanner.write(180);
+
+void lightsNotGood(){
+    FastLED.setBrightness(255);
+    leds[0] = CRGB(255, 0, 0);
+    leds[1] = CRGB(255, 0, 0);
+    leds[2] = CRGB(255, 0, 0);
+    leds[3] = CRGB(255, 0, 0);
+    FastLED.show();
 }
 
-void rightScan() {
-  scanner.write(0);
-}
-
-void frontScan() {
-  scanner.write(100);
-}
-
-/* void counter1() {
-  counter1++;
-}
-
-void counter2() {
-  counter2++;
-} */
+void lightsMiddle(){
+    leds[0] = CRGB(255, 100, 0);
+    leds[1] = CRGB(255, 100, 0);
+    leds[2] = CRGB(255, 100, 0);
+    leds[3] = CRGB(255, 100, 0);
+    FastLED.show();
+}*/

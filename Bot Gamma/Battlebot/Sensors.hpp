@@ -2,7 +2,8 @@
 #include <QTRSensors.h>
 #include "Wheels.hpp"
 
-// Sensors
+const int LINE_HISTORY_LENGTH = 500;
+const int ERROR_THRESHOLD = 5
 QTRSensors qtr;
 uint16_t sensors[8];
 int lineReadData;
@@ -14,7 +15,7 @@ void setupSensors()
   // Line Sensor
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]) {A6,A0,A7,A1,A2,A3,A4,A5},8);
-  lineReadDataHistory = new int[500];
+  lineReadDataHistory = new int[LINE_HISTORY_LENGTH];
     
   // Calibration
   int i;
@@ -34,7 +35,7 @@ void setupSensors()
 void readLine()
 {
   lineReadData = qtr.readLineBlack(sensors);
-  for (int i = 500; i > 0; i--) {
+  for (int i = LINE_HISTORY_LENGTH; i > 0; i--) {
     lineReadDataHistory[i] = lineReadDataHistory[i-1];
   }
   lineReadDataHistory[0] = lineReadData;
@@ -43,16 +44,16 @@ void readLine()
 void lineHistoryTotal()
 {
   int totalLineHistory = 0;
-  for (int i = 500; i > 0; i--) {
+  for (int i = LINE_HISTORY_LENGTH; i > 0; i--) {
     totalLineHistory += lineReadDataHistory[i];
   }
   return totalLineHistory;
 }
 
-void historyCount(int value)
+int historyCount(int value)
 {
   int count = 0;
-  for (int i = 0; i < 500; i++)
+  for (int i = 0; i < LINE_HISTORY_LENGTH; i++)
   {
     if (lineReadDataHistory[i] == value)
     {
@@ -60,4 +61,9 @@ void historyCount(int value)
     }
   }
   return count;
+}
+
+bool hasSeenMostlyBlack()
+{
+  return lineHistoryTotal() * 7000 * (ERROR_THRESHOLD / 100) >= LINE_HISTORY_LENGTH
 }

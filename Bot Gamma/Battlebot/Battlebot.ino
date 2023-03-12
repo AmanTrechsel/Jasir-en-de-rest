@@ -9,28 +9,28 @@ bool haveFun = false;
 
 void setup()
 {    
-  driveBreak(false);
-  rotateLeft(true);
-  delay(500);
-  driveFwd(true);
-  delay(250);
-
+  
   // Setup all included scripts
   setupWheels();
   setupNeoPixel();
-  setupSensors();
   setupGripper();
+
+  openGripper();
+  driveFwd(true);
+
+  setupSensors();
   setupEcho();
 
-  // Start 'Animation'
-  delay(150);
-  openGripper();
-  delay(150);
   closeGripper();
-  delay(150);
-  openGripper();
-  delay(150);
-  closeGripper();
+  driveBreak(true);
+  rotateLeft(true);
+  delay(500);
+
+  driveBreak(true);
+  driveFwd(true);
+  delay(250);
+  
+  driveBreak(true);
 }
 
 void loop()
@@ -61,51 +61,53 @@ void loop()
 
   // Get the distance to anything in front of it
   distance = getDistance();
-  
-
-  // Control Gripper based on Distance
-  if (distance < 5)
-  {
-    openGripper();
-  }
-  else
-  {
-    closeGripper();
-  }
 
   // Check the sensors and output the values
   readLine();
 
-  // Calculating turns
-  int error = lineReadData - 3500;
-
-  int motorSpeed = KP * error + KD * (error - lastError);
-  lastError = error;
-
-  // Calculating motor speeds
-  int m1Speed = 255 + motorSpeed;
-  int m2Speed = 255 - motorSpeed;
-
-  // Min and max speeds 
-  m1Speed = min(max(m1Speed, 0), 255);
-  m2Speed = min(max(m2Speed, 0), 255);
-
-  // starting
-  analogWrite(leftWheelFwd, m1Speed);
-  analogWrite(rightWheelFwd, m2Speed);
-
-  // finish line
-  if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] > 980))
+  if (hasSeenMostlyBlack())
   {
-    driveBreak(true);
-    delay(400);
-    reverseLeftWheel();
-    reverseRightWheel();
-    delay(400);
-    driveBreak(true);
-    delay(400);
-    haveFun = true;
+    if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] > 980))
+    {
+      driveBreak(true);
+      openGripper();
+      delay(400);
+      reverseLeftWheel();
+      reverseRightWheel();
+      delay(400);
+      driveBreak(true);
+      delay(400);
+      haveFun = true;
+    }
+    else
+    {
+      rotateRight();
+    }
   }
+  else
+  {
+    // Calculating turns
+    int error = lineReadData - 3500;
+
+    int motorSpeed = KP * error + KD * (error - lastError);
+    lastError = error;
+
+    // Calculating motor speeds
+    int m1Speed = 255 + motorSpeed;
+    int m2Speed = 255 - motorSpeed;
+
+    // Min and max speeds 
+    m1Speed = min(max(m1Speed, 0), 255);
+    m2Speed = min(max(m2Speed, 0), 255);
+
+    // starting
+    analogWrite(leftWheelBwd, 0);
+    analogWrite(rightWheelBwd, 0);
+    analogWrite(leftWheelFwd, m1Speed);
+    analogWrite(rightWheelFwd, m2Speed);
+  }
+  
+  
   else
   {
     analogWrite(leftWheelFwd, m1Speed);

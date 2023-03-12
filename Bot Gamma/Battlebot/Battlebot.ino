@@ -74,7 +74,7 @@ void loop()
   }
 
   // Check the sensors and output the values
-  lineReadData = qtr.readLineBlack(sensors);
+  readLine();
 
   // Calculating turns
   int error = lineReadData - 3500;

@@ -4,6 +4,7 @@
 #include "EchoLocator.hpp"
 
 // Motor
+const int rightWheelSensor = 9;
 const int leftWheelFwd = 11;
 const int leftWheelBwd = 6;
 const int rightWheelBwd = 5;
@@ -29,6 +30,7 @@ void setupWheels()
   pinMode(leftWheelBwd, OUTPUT);
   pinMode(rightWheelFwd, OUTPUT);
   pinMode(rightWheelBwd, OUTPUT);
+  pinMode(rightWheelSensor, INPUT);
 }
 
 // Forward

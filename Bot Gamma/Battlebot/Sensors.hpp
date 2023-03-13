@@ -3,7 +3,7 @@
 #include "Wheels.hpp"
 
 const int LINE_HISTORY_LENGTH = 100;
-const int ERROR_THRESHOLD = 5;
+const int ERROR_THRESHOLD = 1;
 QTRSensors qtr;
 uint16_t sensors[8];
 int lineReadData;
@@ -40,14 +40,14 @@ int historyCount(int value)
   return count;
 }
 
-int blackHistory()
+int darkHistory()
 {
   return 7000 * (ERROR_THRESHOLD / 100) * LINE_HISTORY_LENGTH;
 }
 
 bool hasSeenMostlyBlack()
 {
-  return lineHistoryTotal() >= blackHistory();
+  return lineHistoryTotal() >= darkHistory();
 }
 
 
@@ -59,10 +59,9 @@ void setupSensors()
   lineReadDataHistory = new int[LINE_HISTORY_LENGTH];
     
   // Calibration
-  int total = lineHistoryTotal();
-  int blackHistory = blackHistory();
+  int blackHistory = darkHistory();
   int i;
-  while (total < blackHistory)
+  while (lineHistoryTotal() < darkHistory())
   {
     neoPixel.clear();
     neoFrontLeft(random(150),random(150),random(150));
@@ -71,6 +70,5 @@ void setupSensors()
     neoBackRight(random(150),random(150),random(150));
     qtr.calibrate();
     readLine();
-    delay(100);
   }
 }

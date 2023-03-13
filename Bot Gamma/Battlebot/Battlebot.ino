@@ -81,7 +81,7 @@ void loop()
     }
     else
     {
-      rotateRight();
+      rotateRight(true);
     }
   }
   else
@@ -103,13 +103,6 @@ void loop()
     // starting
     analogWrite(leftWheelBwd, 0);
     analogWrite(rightWheelBwd, 0);
-    analogWrite(leftWheelFwd, m1Speed);
-    analogWrite(rightWheelFwd, m2Speed);
-  }
-  
-  
-  else
-  {
     analogWrite(leftWheelFwd, m1Speed);
     analogWrite(rightWheelFwd, m2Speed);
   }

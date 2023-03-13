@@ -7,7 +7,6 @@ const int ERROR_THRESHOLD = 5;
 QTRSensors qtr;
 uint16_t sensors[8];
 int lineReadData;
-int calibrationTime = 3;
 int* lineReadDataHistory;
 
 int lineHistoryTotal()
@@ -41,9 +40,14 @@ int historyCount(int value)
   return count;
 }
 
+int blackHistory()
+{
+  return 7000 * (ERROR_THRESHOLD / 100) * LINE_HISTORY_LENGTH;
+}
+
 bool hasSeenMostlyBlack()
 {
-  return lineHistoryTotal() * 7000 * (ERROR_THRESHOLD / 100) >= LINE_HISTORY_LENGTH;
+  return lineHistoryTotal() >= blackHistory();
 }
 
 
@@ -56,8 +60,9 @@ void setupSensors()
     
   // Calibration
   int total = lineHistoryTotal();
+  int blackHistory = blackHistory();
   int i;
-  while (total < 3300000)
+  while (total < blackHistory)
   {
     neoPixel.clear();
     neoFrontLeft(random(150),random(150),random(150));

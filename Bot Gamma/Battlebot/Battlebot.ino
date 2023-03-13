@@ -22,13 +22,18 @@ void setup()
   setupEcho();
 
   closeGripper();
+  delay(10);
   driveBreak(true);
   rotateLeft(true);
-  delay(500);
 
+  while (wheelSensorCounter < 30)
+  {
+    readRightWheelSensor();
+    delay(10);
+  }
   driveBreak(true);
   driveFwd(true);
-  delay(250);
+  delay(500);
   
   driveBreak(true);
 }
@@ -106,6 +111,8 @@ void loop()
     analogWrite(leftWheelFwd, m1Speed);
     analogWrite(rightWheelFwd, m2Speed);
   }
+
+  readRightWheelSensor();
  
  
   // Increment loop counter

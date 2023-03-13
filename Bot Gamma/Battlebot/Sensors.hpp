@@ -4,6 +4,7 @@
 
 const int LINE_HISTORY_LENGTH = 100;
 const int ERROR_THRESHOLD = 1;
+const int CALIBRATION_DISTANCE = 40;
 QTRSensors qtr;
 uint16_t sensors[8];
 int lineReadData;
@@ -59,9 +60,7 @@ void setupSensors()
   lineReadDataHistory = new int[LINE_HISTORY_LENGTH];
     
   // Calibration
-  int blackHistory = darkHistory();
-  int i;
-  while (lineHistoryTotal() < darkHistory())
+  while (wheelSensorCounter < CALIBRATION_DISTANCE)
   {
     neoPixel.clear();
     neoFrontLeft(random(150),random(150),random(150));
@@ -70,5 +69,8 @@ void setupSensors()
     neoBackRight(random(150),random(150),random(150));
     qtr.calibrate();
     readLine();
+    readRightWheelSensor();
   }
+  wheelSensorCounter = 0;
+  actualSpeed = 255;
 }

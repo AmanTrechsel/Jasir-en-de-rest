@@ -11,13 +11,15 @@ const int rightWheelBwd = 5;
 const int rightWheelFwd = 3;
 const int rotationSpeed = 160; // Speed at which to rotate
 const int driveSpeed = 160; // Speed at which to drive
-int actualSpeed = 255; // The currently set speed to the motors
+int actualSpeed = 150; // The currently set speed to the motors
 
 // PID constants
 const float KP = 0.225;
 const float KD = 2.25;
 
 int lastError = 0;
+int wheelSensorCounter = 0;
+int lastWheelSensor = 0;
 
 
 //rotatedLeftLast
@@ -31,6 +33,15 @@ void setupWheels()
   pinMode(rightWheelFwd, OUTPUT);
   pinMode(rightWheelBwd, OUTPUT);
   pinMode(rightWheelSensor, INPUT);
+}
+
+void readRightWheelSensor()
+{
+  if (analogRead(rightWheelSensor) != lastWheelSensor)
+  {
+    wheelSensorCounter++;
+    lastWheelSensor = analogRead(rightWheelSensor);
+  }
 }
 
 // Forward

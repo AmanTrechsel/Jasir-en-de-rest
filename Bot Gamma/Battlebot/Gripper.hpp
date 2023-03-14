@@ -12,10 +12,12 @@ void setupGripper()
 // Gripper
 void openGripper()
 {
-  analogWrite(gripper, openedAngle);
+  neoFull(0,150,0);
+  //analogWrite(gripper, openedAngle);
 }
 
 void closeGripper()
 {
-  analogWrite(gripper, closedAngle);
+  neoFull(0,0,150);
+  //analogWrite(gripper, closedAngle);
 }

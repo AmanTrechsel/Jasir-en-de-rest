@@ -16,6 +16,10 @@ void setup()
   setupGripper();
 
   openGripper();
+  actualSpeed = 255;
+  driveFwd(true);
+  delay(50);
+  actualSpeed = 180;
   driveFwd(true);
 
   setupSensors();
@@ -35,7 +39,9 @@ void setup()
   driveFwd(true);
   delay(500);
   
-  driveBreak(true);
+  driveBreak(false);
+  // Clear history
+  clearHistory();
 }
 
 void loop()
@@ -71,16 +77,17 @@ void loop()
   readLine();
 
   if (hasSeenMostlyBlack())
-  {
+  { 
     if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] > 980))
     {
-      driveBreak(true);
+      neoFull(128,128,128);
+      driveBreak(false);
       openGripper();
       delay(400);
       reverseLeftWheel();
       reverseRightWheel();
       delay(400);
-      driveBreak(true);
+      driveBreak(false);
       delay(400);
       haveFun = true;
     }
@@ -91,6 +98,7 @@ void loop()
   }
   else
   {
+    neoFull(random(150),random(150),random(150));
     // Calculating turns
     int error = lineReadData - 3500;
 

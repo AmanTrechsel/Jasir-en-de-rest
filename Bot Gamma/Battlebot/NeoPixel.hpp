@@ -69,3 +69,11 @@ void neoFront(int r, int g, int b)
   neoFrontLeft(r,g,b);
   neoFrontRight(r,g,b);
 }
+
+void neoFull(int r, int g, int b)
+{
+  neoFrontLeft(r,g,b);
+  neoFrontRight(r,g,b);
+  neoBackLeft(r,g,b);
+  neoBackRight(r,g,b);
+}

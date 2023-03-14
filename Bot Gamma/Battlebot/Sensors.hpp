@@ -2,9 +2,9 @@
 #include <QTRSensors.h>
 #include "Wheels.hpp"
 
-const int LINE_HISTORY_LENGTH = 100;
-const int ERROR_THRESHOLD = 1;
-const int CALIBRATION_DISTANCE = 40;
+const int LINE_HISTORY_LENGTH = 250;
+const int ERROR_THRESHOLD = 100;
+const int CALIBRATION_DISTANCE = 28;
 QTRSensors qtr;
 uint16_t sensors[8];
 int lineReadData;
@@ -28,6 +28,14 @@ void readLine()
   lineReadDataHistory[0] = lineReadData;
 }
 
+void clearHistory()
+{
+  for (int i = 0; i < LINE_HISTORY_LENGTH; i++)
+  {
+    lineReadDataHistory[i] = 0;
+  }
+}
+
 int historyCount(int value)
 {
   int count = 0;
@@ -43,7 +51,7 @@ int historyCount(int value)
 
 int darkHistory()
 {
-  return 7000 * (ERROR_THRESHOLD / 100) * LINE_HISTORY_LENGTH;
+  return 7000 * (ERROR_THRESHOLD / 100) * LINE_HISTORY_LENGTH * 1000000000;
 }
 
 bool hasSeenMostlyBlack()

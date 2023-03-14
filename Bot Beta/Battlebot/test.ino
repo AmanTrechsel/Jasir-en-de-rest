@@ -6,24 +6,32 @@ const int motorB2 = 5; // the second pin that is connected to motor B (the right
 const int sensorMotor1 = 3; // rotation sensor for motor B (the right motor)
 const int sensorMotor2 = 2; // rotation sensor for motor A (the left motor)
 const int scanner = 12; // servo under the echoSensor
+const int gripper = 4;
 const int trigPin = 7; // the pin that is connected to the trigger of the ultra sonic sensor
 const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
 int counter1 = 0;
 int counter2 = 0;
 int pos = 0;
+int speed;
 long duration; // the time it takes for the echo to be detected
+boolean turnedAround = true;
 
 int distance;
-const int minSafeDistance = 15;
+const int minSafeDistance = 20;
 
 
 
 void setup() {
+  pinMode(motorA1, OUTPUT);
+  pinMode(motorA2, OUTPUT);
+  pinMode(motorB1, OUTPUT);
+  pinMode(motorB2, OUTPUT);
   pinMode(sensorMotor1, INPUT);
   pinMode(sensorMotor2, INPUT);
   pinMode(trigPin, OUTPUT); // sets the trigger pin as an output
   pinMode(echoPin, INPUT); // sets the echo pin as an input
   pinMode(scanner, OUTPUT);
+  pinMode(gripper, OUTPUT);
   Serial.begin(9600);
   attachInterrupt(digitalPinToInterrupt(sensorMotor1), count1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(sensorMotor2), count2, CHANGE);
@@ -31,90 +39,186 @@ void setup() {
 }
 
 void loop() {
-  
-  leftScan();
-  delay(500);
-  echoSensor();
-  if (distance >= minSafeDistance)
+  /*if (turnedAround == false)
   {
-    turnLeft();
-  }
-  else 
-  {
-    rightScan();
+    counter2 = 0;
+    counter1 = 0;
+    brake();
+    leftScan();
     delay(500);
     echoSensor();
-    if (distance >= minSafeDistance)
+    if (distance <= minSafeDistance)
     {
-      turnRight();
+      rightScan();
+      delay(500);
+      echoSensor();
+      if(distance <= minSafeDistance)
+      {
+        frontScan();
+        delay(500);
+        echoSensor();
+        if (distance <= minSafeDistance)
+        {
+          brake();
+          turnAround();
+          counter2 = 0;
+          squareForward();
+          turnedAround = true;
+        }
+        else
+        {
+          counter2 = 0;
+          squareForward();
+        }
+      }
+      else
+      {
+        brake();
+        turnRight();
+        counter2 = 0;
+        squareForward();
+      }
     }
     else
+    {
+      brake();
+      turnLeft();
+      counter2 = 0;
+      squareForward();
+    } 
+  }
+  else if (turnedAround == true)
+  {
+    counter2 = 0;
+    counter1 = 0;
+    brake();
+    leftScan();
+    delay(500);
+    echoSensor();
+    if (distance <= minSafeDistance)
     {
       frontScan();
       delay(500);
       echoSensor();
       if (distance <= minSafeDistance)
       {
+        brake();
+        turnAround();
+        counter2 = 0;
+        squareForward();
+        turnedAround = true;
+      }
+      else
+      {
+        counter2 = 0;
+        squareForward();
+        turnedAround = false;
+      }
+    }
+    else
+    {
+      brake();
+      turnLeft();
+      counter2 = 0;
+      squareForward();
+      turnedAround = false;
+    }
+  }*/
+  counter2 = 0;
+  counter1 = 0;
+  brake();
+  rightScan();
+  delay(500);
+  echoSensor();
+  if (distance < minSafeDistance)
+  {
+    frontScan();
+    delay(500);
+    echoSensor();
+    if (distance < minSafeDistance)
+    {
+      leftScan();
+      delay(500);
+      echoSensor();
+      if (distance > minSafeDistance)
+      {
+        brake();
+        turnLeft();
+        counter2 = 0;
+        squareForward();    
+      }
+      else
+      {
+        brake();
         turnAround();
       }
     }
+    else
+    {
+      counter2 = 0;
+      brake();
+      squareForward();
+    }
   }
-  
-  /*boolean scanLeft = false;
-  boolean scanRight = false;
-  boolean scanFront = false;
-
-  leftScan();
-  delay(500);
-  if (scanLeft = true)
+  else
   {
-    echoSensorLeft();
-    scanLeft = false;
-  }
-  if (scanLeft = false)
-   {
-     rightScan();
-     delay(500);
-     if (scanRight = true)
-     {
-       echoSensorRight();
-       scanRight = false;
-     }
-     else
-     {
-       frontScan();
-       delay(500);
-       if (scanFront = true)
-       {
-         echoSensorFront();
-         scanFront = false;
-       }
-     }
-   }
-  Serial.print("Left: ");
-  Serial.println(distanceLeft);
-  Serial.print("right: ");
-  Serial.println(distanceRight);
-  Serial.print("front: ");
-  Serial.println(distanceFront);
-
-  if (distanceLeft >= minSafeDistance)
-  {
-    turnLeft();
-  }
-  else if (distanceRight >= minSafeDistance)
-  {
+    brake();
     turnRight();
+    counter2 = 0;
+    squareForward();
   }
-  else if (distanceRight < minSafeDistance && distanceLeft < minSafeDistance && distanceFront < minSafeDistance)
+}
+
+void squareForward()
+{
+  while (counter2 < 52)
   {
-    turnAround();
+    speed = 225;
+    leftForward();
+    rightForward();
+  } 
+}
+
+void forwardCorrection()
+{
+  while (counter2 < 20)
+  {
+    speed = 225;
+    leftForward();
+    rightForward();
   }
-  else if (distanceFront >= minSafeDistance)
+}
+
+void turnLeft()
+{
+  while (counter2 < 20)
   {
-    squareUp();
-  }*/
-  
+    speed = 175;
+    leftBackward();
+    rightForward();
+   }
+}
+
+void turnRight()
+{
+  while (counter2 < 20)
+  {
+    speed = 175;
+    leftForward();
+    rightBackward();
+  }
+}
+
+void turnAround()
+{
+  while (counter2 <= 30)
+  {
+    rightBackward();
+  }
+  while (counter2 > 31 && counter1 <= 30)
+  {
+    leftForward();
+  }
 }
 
 void count1() {
@@ -123,46 +227,6 @@ void count1() {
 
 void count2() {
   counter2++;
-}
-
-void squareUp () {
-  forward();
-  if (counter1 >= 20) {
-    digitalWrite(motorB1, HIGH);
-    digitalWrite(motorB2, HIGH);
-  }
-  if (counter2 >= 20) {
-    digitalWrite(motorA1, HIGH);
-    digitalWrite(motorA2, HIGH);
-  }
-}
-
-void turnLeft () {
-  left();
-  if (counter2 >= 14) {
-    leftBrake();
-  }
-  if (counter1 >= 14) {
-    rightBrake();
-  }
-}
-
-void turnRight () {
-  right();
-  if (counter2 >= 14) {
-    leftBrake();
-  }
-  if (counter1 >= 14) {
-    rightBrake();
-  }
-}
-
-void turnAround () {
-  left();
-  if (counter2 >= 32) {
-    leftBrake();
-    rightBrake();
-  }
 }
 
 void rightBrake () {
@@ -175,25 +239,37 @@ void leftBrake () {
   digitalWrite(motorA2, HIGH);
 }
 
-void leftScan () {
+void leftScan () 
+{
+  for (int i=0; i<10; i++)
+  {
   digitalWrite(scanner, HIGH);
   delayMicroseconds(2550);
   digitalWrite(scanner, LOW);
   delayMicroseconds(18550);
+  }
 }
 
-void rightScan () {
-  digitalWrite(scanner, HIGH);
-  delayMicroseconds(550);
-  digitalWrite(scanner, LOW);
-  delayMicroseconds(18550);
+void rightScan () 
+{
+  for (int i=0; i<10; i++)
+  {
+    digitalWrite(scanner, HIGH);
+    delayMicroseconds(550);
+    digitalWrite(scanner, LOW);
+    delayMicroseconds(18550);
+  }
 }
 
-void frontScan () {
-  digitalWrite(scanner, HIGH);
-  delayMicroseconds(1550);
-  digitalWrite(scanner, LOW);
-  delayMicroseconds(18550);
+void frontScan () 
+{
+  for (int i=0; i<10; i++)
+  {
+    digitalWrite(scanner, HIGH);
+    delayMicroseconds(1550);
+    digitalWrite(scanner, LOW);
+    delayMicroseconds(18550);
+  }
 }
 
 
@@ -205,20 +281,8 @@ void echoSensor () {
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distance = duration * 0.034 / 2;
-}
-
-void forward() {
-  digitalWrite(motorA1, LOW);
-  digitalWrite(motorA2, HIGH);
-  digitalWrite(motorB1, LOW);
-  digitalWrite(motorB2, HIGH);
-}
-
-void backward() {
-  digitalWrite(motorA1, HIGH);
-  digitalWrite(motorA2, LOW);
-  digitalWrite(motorB1, HIGH);
-  digitalWrite(motorB2, LOW);
+  Serial.println(distance);
+  delay(10);
 }
 
 void brake() {
@@ -228,16 +292,26 @@ void brake() {
   digitalWrite(motorB2, HIGH);
 }
 
-void left() {
-  digitalWrite(motorA1, HIGH);
-  digitalWrite(motorA2, LOW);
-  digitalWrite(motorB1, LOW);
-  digitalWrite(motorB2, HIGH);
+void leftForward()
+{
+  analogWrite(motorA1, 0);
+  analogWrite(motorA2, speed);
 }
 
-void right() {
-  digitalWrite(motorA1, LOW);
-  digitalWrite(motorA2, HIGH);
-  digitalWrite(motorB1, HIGH);
-  digitalWrite(motorB2, LOW);
+void rightForward()
+{
+  analogWrite(motorB1, 0);
+  analogWrite(motorB2, speed);
+}
+
+void leftBackward()
+{
+  analogWrite(motorA1, speed);
+  analogWrite(motorA2, 0);
+}
+
+void rightBackward()
+{
+  analogWrite(motorB1, speed);
+  analogWrite(motorB2, 0);
 }

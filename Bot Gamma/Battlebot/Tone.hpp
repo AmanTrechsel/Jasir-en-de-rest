@@ -3,37 +3,30 @@
 const int tonePin = 8;
 bool currentTone;
 
+int melody[] = {
+  NOTE_B3, NOTE_B4, NOTE_FS3, NOTE_DS3, NOTE_B4, NOTE_FS3, NOTE_E3,
+  NOTE_C3, NOTE_C4, NOTE_G3, NOTE_E3, NOTE_C4, NOTE_G3, NOTE_E3,
+  NOTE_DS4, NOTE_DS4, NOTE_E4, NOTE_F4, NOTE_F4, NOTE_FS4, NOTE_G4, NOTE_G4, NOTE_GS4, NOTE_A5, NOTE_B5
+};
+
+int noteDurations[] = {
+  16,16,16,16,32,12,8,
+  16,16,16,16,32,12,8,
+  16,16,16,16,32,12,8,
+  32,32,16,32,32,16,32,32,16,8
+};
+
 void setupTone()
 {
   pinMode(tonePin, OUTPUT);
-  tone(tonePin, NOTE_B3);
-  delay(100);
-  tone(tonePin, NOTE_B4);
-  delay(100);
-  tone(tonePin, NOTE_FS3);
-  delay(100);
-  tone(tonePin, NOTE_DS3);
-  delay(100);
-  tone(tonePin, NOTE_B4);
-  delay(50);
-  tone(tonePin, NOTE_FS3);
-  delay(300);
-  tone(tonePin, NOTE_E3);
-  delay(200);
-  tone(tonePin, NOTE_B3);
-  delay(100);
-  tone(tonePin, NOTE_B4);
-  delay(100);
-  tone(tonePin, NOTE_FS3);
-  delay(100);
-  tone(tonePin, NOTE_DS3);
-  delay(100);
-  tone(tonePin, NOTE_B4);
-  delay(50);
-  tone(tonePin, NOTE_FS3);
-  delay(300);
-  tone(tonePin, NOTE_E3);
-  delay(200);
+  for (int i = 0; i < sizeof(melody); i++)
+  {
+    int noteDuration = 1000 / noteDurations[i];
+    tone(tonePin, melody[i], noteDuration);
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(tonePin);
+  }
   noTone(tonePin);
 }
 
@@ -41,14 +34,13 @@ void playTone(int loopCounter)
 {
   if (loopCounter%10 == 0)
   {
-    noTone(tonePin);
     if (currentTone)
     {
-      tone(tonePin, NOTE_F2);
+      tone(tonePin, NOTE_F4, 5);
     } 
     else
     {
-      tone(tonePin, NOTE_B2);
+      tone(tonePin, NOTE_B4, 5);
     } 
     currentTone = !currentTone;  
   }

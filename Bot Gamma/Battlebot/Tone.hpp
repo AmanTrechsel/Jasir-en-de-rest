@@ -35,7 +35,6 @@ int playFinish()
   int noteDuration = 1000 / noteDurations2[songPosition];
   tone(tonePin, melody2[songPosition], noteDuration);
   int pauseBetweenNotes = noteDuration * 1.30;
-  delay(pauseBetweenNotes);
   songPosition++;
   return pauseBetweenNotes;
 }

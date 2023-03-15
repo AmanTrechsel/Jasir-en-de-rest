@@ -1,6 +1,6 @@
 // Libraries
-#include "Sensors.hpp"
 #include "Tone.hpp"
+#include "Sensors.hpp"
 
 // Loop Counter
 int loopCounter;

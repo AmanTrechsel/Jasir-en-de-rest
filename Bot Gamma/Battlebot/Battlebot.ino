@@ -10,12 +10,11 @@ bool haveFun = false;
 
 void setup()
 {    
-  
   // Setup all included scripts
+  setupTone();
   setupWheels();
   setupNeoPixel();
   setupGripper();
-  setupTone();
 
   openGripper();
   actualSpeed = 255;

@@ -86,9 +86,8 @@ void calibrateSensors()
   {
     openGripper();
     moveForward(CMtoSteps(30), 255);
-    delay(990);  // Wait one second
+    delay(500);  // Wait one second
     closeGripper();
-    delay(990);
     rotateLeft(8, 255);
     calibrationComplete = true;
   }
@@ -146,7 +145,7 @@ void closeGripper()
   for(i = 0; i < 10; i++)
   {
   digitalWrite(gripper, HIGH);
-  delayMicroseconds(1200);
+  delayMicroseconds(1100);
   digitalWrite(gripper, LOW);
   delay(20); 
   }
@@ -255,12 +254,14 @@ void ISR_R2_Count()
 
 // Stop when all sensors detect black
 void stopWhenBlack() {
-  if((sensorValues[0] > 990) && (sensorValues[1] > 990) && (sensorValues[2] > 990) && (sensorValues[3] > 990) && (sensorValues[4] > 990) && (sensorValues[5] > 990) && (sensorValues[6] > 990) && (sensorValues[7] > 990))
+  if((sensorValues[0] == 1000) && (sensorValues[1] == 1000) && (sensorValues[2] == 1000) && (sensorValues[3] == 1000) && (sensorValues[4] == 1000) && (sensorValues[5] == 1000) && (sensorValues[6] == 1000) && (sensorValues[7] == 1000))
   {
     brake();
-    delay(990);
+    moveForward(CMtoSteps(15), 255);
+    delay(500);
+    moveReverse(CMtoSteps(15), 255);
     openGripper();
-    moveReverse(CMtoSteps(50), 200);
+    moveReverse(CMtoSteps(50), 255);
     finish = true;
   }
 }

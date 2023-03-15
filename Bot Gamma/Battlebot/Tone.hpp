@@ -1,6 +1,7 @@
 #include "Notes.hpp"
 
 const int tonePin = 8;
+int songPosition;
 bool currentTone;
 
 int melody[] = {
@@ -27,18 +28,16 @@ int noteDurations2[] = {
   8,8,8,16,16,16,8,16,16,16,8
 };
 
-void playFinish(int loopCounter)
+int playFinish()
 {
-  for (int i = 0; i < 22*4; i++)
-  {
-    i = i%23;
-    int noteDuration = 1000 / noteDurations2[i];
-    tone(tonePin, melody2[i], noteDuration);
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    noTone(tonePin);
-  }
   noTone(tonePin);
+  songPosition = songPosition%23;
+  int noteDuration = 1000 / noteDurations2[songPosition];
+  tone(tonePin, melody2[songPosition], noteDuration);
+  int pauseBetweenNotes = noteDuration * 1.30;
+  delay(pauseBetweenNotes);
+  songPosition++;
+  return pauseBetweenNotes;
 }
 
 void setupTone()
@@ -53,13 +52,12 @@ void setupTone()
     noTone(tonePin);
   }
   noTone(tonePin);
-  playFinish(1);
 }
 
 void playTone(int loopCounter)
 {
   noTone(tonePin);
-  if (loopCounter%10 == 0)
+  if (loopCounter%20 == 0)
   {
     if (currentTone)
     {

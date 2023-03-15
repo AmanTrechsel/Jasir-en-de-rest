@@ -20,7 +20,7 @@ int noteDurations[] = {
 void setupTone()
 {
   pinMode(tonePin, OUTPUT);
-  for (int i = 0; i < sizeof(melody); i++)
+  for (int i = 0; i < 31; i++)
   {
     int noteDuration = 1000 / noteDurations[i];
     tone(tonePin, melody[i], noteDuration);

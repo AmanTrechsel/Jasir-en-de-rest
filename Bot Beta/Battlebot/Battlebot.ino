@@ -46,7 +46,7 @@ void loop() {
   //2550 for left
   //1600 for front
   //550 for right
-
+/*
   frontScan();
   echoSensor();
   forward();
@@ -56,7 +56,6 @@ void loop() {
     leftScan();
     delay(800);
     echoSensor();
-    delay(
     if (distance <= 15) {
       rightScan();
       delay(800);
@@ -101,7 +100,7 @@ void loop() {
           digitalWrite(motorB2, HIGH);
         } 
     }
-  } 
+  } */
 }
 
 void echoSensor () {

@@ -2,6 +2,7 @@
 #include "Tone.hpp"
 #include "Sensors.hpp"
 
+
 // Loop Counter
 int loopCounter;
 
@@ -43,6 +44,7 @@ void setup()
   driveBreak(false);
   // Clear history
   clearHistory();
+  
 }
 
 void loop()
@@ -74,7 +76,8 @@ void loop()
   readLine();
 
   if (hasSeenMostlyBlack())
-  { 
+  {    
+    
     if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] > 980))
     {
       neoFull(128,128,128);
@@ -122,4 +125,9 @@ void loop()
  
   // Increment loop counter
   loopCounter += 1;
+
+  if (distance <= 5)
+  {
+    //closeGripper();
+  } 
 }

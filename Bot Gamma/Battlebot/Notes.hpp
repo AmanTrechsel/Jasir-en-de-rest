@@ -86,4 +86,4 @@ const int NOTE_B7 = 3951;
 const int NOTE_C8 = 4186;
 const int NOTE_CS8 = 4435;
 const int NOTE_D8 = 4699;
-const int NOTE_DS8 = 4978
+const int NOTE_DS8 = 4978;

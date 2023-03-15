@@ -27,6 +27,19 @@ int noteDurations2[] = {
   8,8,8,16,16,16,8,16,16,16,8
 };
 
+void playFinish(int loopCounter)
+{
+  for (int i = 0; i < 22; i++)
+  {
+    int noteDuration = 1000 / noteDurations2[i] * 2;
+    tone(tonePin, melody2[i], noteDuration);
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(tonePin);
+  }
+  noTone(tonePin);
+}
+
 void setupTone()
 {
   pinMode(tonePin, OUTPUT);
@@ -39,20 +52,7 @@ void setupTone()
     noTone(tonePin);
   }
   noTone(tonePin);
-  playFinsh(1);
-}
-
-void playFinsh(int loopCounter)
-{
-  for (int i = 0; i < 22; i++)
-  {
-    int noteDuration = 1000 / noteDurations2[i] * 2;
-    tone(tonePin, melody2[i], noteDuration);
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    noTone(tonePin);
-  }
-  noTone(tonePin);
+  playFinish(1);
 }
 
 void playTone(int loopCounter)

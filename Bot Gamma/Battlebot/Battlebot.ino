@@ -1,5 +1,6 @@
 // Libraries
 #include "Sensors.hpp"
+#include "Tone.hpp"
 
 // Loop Counter
 int loopCounter;
@@ -14,6 +15,7 @@ void setup()
   setupWheels();
   setupNeoPixel();
   setupGripper();
+  setupTone();
 
   openGripper();
   actualSpeed = 255;
@@ -46,11 +48,7 @@ void setup()
 
 void loop()
 {
-  // Have fun toggle
-  if (digitalRead(8) == LOW)
-  {
-    haveFun = !haveFun;
-  }
+  playTone(loopCounter);
 
   if (haveFun)
   {

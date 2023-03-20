@@ -78,6 +78,7 @@ void setupSensors()
     qtr.calibrate();
     readLine();
     readRightWheelSensor();
+    closeGripper();
   }
   wheelSensorCounter = 0;
   actualSpeed = 255;

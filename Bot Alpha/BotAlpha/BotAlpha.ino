@@ -7,7 +7,8 @@
  */
 
 // Libraries
-#include <QTRSensors.h> // Library for the IR sensors
+#include <QTRSensors.h> // Library for the reflectance sensors
+#include "PinkPanther.h" // Song
 
 // Constants - Wheels
 const int leftWheelFwd = 11; // Links, vooruit
@@ -32,6 +33,7 @@ const int echoPin = 13;
 
 // Variables - Echo Sensor
 long duration;
+int distance;
 
 int interval = 333; // In ms
 unsigned long time_now = 0;
@@ -115,16 +117,17 @@ void calibrateSensors()
 
 void loop()
 {
-  if(!finish)
-  {
-    PID();
-    avoidObjects();
-    stopWhenBlack();
-  }
-  else
-  {
-    brake();
-  }
+    if(!finish)
+    {
+      PID();
+      avoidObjects();
+      stopWhenBlack();
+    }
+    else
+    {
+      brake();
+      PinkPanther();
+    }
 }
 
 // PID
@@ -146,6 +149,7 @@ void PID()
   // Letting robot drive on caluclated speeds
   analogWrite(leftWheelFwd, m1Speed);
   analogWrite(rightWheelFwd, m2Speed);
+
 }
 
 // Move specific CM forward
@@ -168,7 +172,7 @@ void moveForward(int steps, int mspeed)
     }
     if (steps > R2_Count) 
     {
-      analogWrite(rightWheelFwd, mspeed - 10); // Small correction, so that the wheels spin at the same speed
+      analogWrite(rightWheelFwd, mspeed - 12); // Small correction, so that the wheels spin at the same speed
     } 
     else 
     {
@@ -268,7 +272,7 @@ void rotateRight(int steps, int mspeed)
     if (steps > R1_Count) 
     {
       analogWrite(leftWheelFwd, mspeed);
-      analogWrite(rightWheelFwd, 100);
+      analogWrite(rightWheelFwd, 60);
     } 
     else 
     {
@@ -302,7 +306,7 @@ void stopWhenBlack() {
     brake();
     moveForward(CMtoSteps(15), 255);
     delay(500);
-    moveReverse(CMtoSteps(15), 255);
+    moveReverse(CMtoSteps(18), 255);
     openGripper();
     moveReverse(CMtoSteps(50), 255);
     finish = true;
@@ -322,10 +326,11 @@ void avoidObjects()
     distance = duration * 0.034 / 2; // In CM
 
     // Avoid object
-    if (distance < 15)
+    if (distance <= 18)
     {
-      rotateLeft(4, 255);
-      rotateRight(16, 255);
+      rotateLeft(10, 255);
+      moveForward(CMtoSteps(16), 255);
+      rotateRight(38, 255);
     }
   }
 }

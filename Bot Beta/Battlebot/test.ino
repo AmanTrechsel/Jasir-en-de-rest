@@ -13,6 +13,8 @@ int counter1 = 0;
 int counter2 = 0;
 int pos = 0;
 int speed;
+int turnValue;
+
 long duration; // the time it takes for the echo to be detected
 boolean turnedAround = true;
 
@@ -39,91 +41,6 @@ void setup() {
 }
 
 void loop() {
-  /*if (turnedAround == false)
-  {
-    counter2 = 0;
-    counter1 = 0;
-    brake();
-    leftScan();
-    delay(500);
-    echoSensor();
-    if (distance <= minSafeDistance)
-    {
-      rightScan();
-      delay(500);
-      echoSensor();
-      if(distance <= minSafeDistance)
-      {
-        frontScan();
-        delay(500);
-        echoSensor();
-        if (distance <= minSafeDistance)
-        {
-          brake();
-          turnAround();
-          counter2 = 0;
-          squareForward();
-          turnedAround = true;
-        }
-        else
-        {
-          counter2 = 0;
-          squareForward();
-        }
-      }
-      else
-      {
-        brake();
-        turnRight();
-        counter2 = 0;
-        squareForward();
-      }
-    }
-    else
-    {
-      brake();
-      turnLeft();
-      counter2 = 0;
-      squareForward();
-    } 
-  }
-  else if (turnedAround == true)
-  {
-    counter2 = 0;
-    counter1 = 0;
-    brake();
-    leftScan();
-    delay(500);
-    echoSensor();
-    if (distance <= minSafeDistance)
-    {
-      frontScan();
-      delay(500);
-      echoSensor();
-      if (distance <= minSafeDistance)
-      {
-        brake();
-        turnAround();
-        counter2 = 0;
-        squareForward();
-        turnedAround = true;
-      }
-      else
-      {
-        counter2 = 0;
-        squareForward();
-        turnedAround = false;
-      }
-    }
-    else
-    {
-      brake();
-      turnLeft();
-      counter2 = 0;
-      squareForward();
-      turnedAround = false;
-    }
-  }*/
   counter2 = 0;
   counter1 = 0;
   brake();
@@ -143,35 +60,54 @@ void loop() {
       if (distance > minSafeDistance)
       {
         brake();
+        startUp();
+        counter1 = 0;
         turnLeft();
         counter2 = 0;
-        squareForward();    
+        turnValue = 30;
+        moveForward();    
       }
       else
       {
         brake();
         turnAround();
+        counter2 = 0;
+        turnValue = 12;
+        moveForward();
       }
     }
     else
     {
       counter2 = 0;
       brake();
-      squareForward();
+      startUp();
+      counter2 = 0;
+      turnValue = 52;
+      moveForward();
     }
   }
   else
   {
     brake();
+    startUp();
+    counter2 = 0;
     turnRight();
     counter2 = 0;
-    squareForward();
+    turnValue = 30;
+    moveForward();
   }
 }
 
-void squareForward()
+void a()
 {
-  while (counter2 < 52)
+  analogWrite(motorA1, 0);
+  analogWrite(motorA2, 150);
+  analogWrite(motorB1, 0);
+  analogWrite(motorB2, 150);
+}
+void moveForward()
+{
+  while (counter2 < turnValue)
   {
     speed = 225;
     leftForward();
@@ -179,44 +115,52 @@ void squareForward()
   } 
 }
 
-void forwardCorrection()
+void turnAround()
 {
-  while (counter2 < 20)
-  {
-    speed = 225;
-    leftForward();
-    rightForward();
-  }
+  leftTurn();
+  brake();
+  delay(500);
+  turnValue = 35;
+  turnRight();
 }
 
 void turnLeft()
 {
-  while (counter2 < 20)
+  turnValue = 37;
+  while (counter2 < turnValue)
   {
-    speed = 175;
-    leftBackward();
+    speed = 200;
     rightForward();
    }
 }
 
 void turnRight()
 {
-  while (counter2 < 20)
+  turnValue = 37;
+  while (counter1 < turnValue)
   {
-    speed = 175;
+    speed = 200;
     leftForward();
-    rightBackward();
   }
 }
 
-void turnAround()
+void leftTurn()
 {
-  while (counter2 <= 30)
+  turnValue = 40;
+  while (counter1 < turnValue)
   {
-    rightBackward();
+    speed = 200;
+    leftBackward();
   }
-  while (counter2 > 31 && counter1 <= 30)
+}
+
+void startUp()
+{
+  turnValue = 1;
+  while (counter2 < turnValue)
   {
+    speed = 255;
+    rightForward();
     leftForward();
   }
 }
@@ -295,7 +239,7 @@ void brake() {
 void leftForward()
 {
   analogWrite(motorA1, 0);
-  analogWrite(motorA2, speed);
+  analogWrite(motorA2, speed - 3);
 }
 
 void rightForward()

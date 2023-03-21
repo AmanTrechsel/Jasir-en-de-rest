@@ -10,7 +10,7 @@ const int leftWheelBwd = 6;
 const int rightWheelBwd = 5;
 const int rightWheelFwd = 3;
 const int rotationSpeed = 160; // Speed at which to rotate
-const int driveSpeed = 160; // Speed at which to drive
+const int driveSpeed = 150; // Speed at which to drive
 int actualSpeed = 150; // The currently set speed to the motors
 
 // PID constants
@@ -143,15 +143,15 @@ void rotateLeft(bool doLights)
 void rotateRight2()
 {
   driveBreak(false);
-  driveLeftWheel(actualSpeed);
-  driveRightWheel(150);
+  driveLeftWheel(255);
+  driveRightWheel(0);
 }
 
 void rotateLeft2()
 {
   driveBreak(false);
-  driveRightWheel(actualSpeed);
-  driveLeftWheel(150);
+  driveRightWheel(255);
+  driveLeftWheel(0);
 }
 
 void driveAdvanced(int error)

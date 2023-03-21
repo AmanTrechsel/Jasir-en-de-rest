@@ -1,4 +1,4 @@
-#ifndef PinkPantgher_H
+#ifndef PinkPanther_H
 #define PinkPanther_H
 
 #define NOTE_B0  31

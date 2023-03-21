@@ -9,6 +9,7 @@
 // Libraries
 #include <QTRSensors.h> // Library for the reflectance sensors
 #include "PinkPanther.h" // Song
+#include "LightShow.h" // Led
 
 // Constants - Wheels
 const int leftWheelFwd = 11; // Links, vooruit
@@ -32,8 +33,8 @@ const int trigPin = 12;
 const int echoPin = 13;
 
 // Variables - Echo Sensor
-long duration;
-int distance;
+float duration;
+float distance;
 
 int interval = 333; // In ms
 unsigned long time_now = 0;
@@ -79,6 +80,9 @@ void setup()
   // Configure - Sensors
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
+
+  // led
+  setupNeoPixel();
   
   // Configure - Wheels
   pinMode(leftWheelFwd, OUTPUT);
@@ -122,6 +126,7 @@ void loop()
       PID();
       avoidObjects();
       stopWhenBlack();
+      party();
     }
     else
     {
@@ -323,7 +328,7 @@ void avoidObjects()
     digitalWrite(trigPin, HIGH);
     digitalWrite(trigPin, LOW);
     duration = pulseIn(echoPin, HIGH);
-    distance = duration * 0.034 / 2; // In CM
+    distance = duration * 0.0343 / 2; // In CM
 
     // Avoid object
     if (distance <= 18)

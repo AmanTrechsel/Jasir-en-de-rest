@@ -1,5 +1,5 @@
 // Libraries
-#include "NeoPixel.hpp"
+#include "Bluetooth.hpp"
 #include "Gripper.hpp"
 #include "EchoLocator.hpp"
 
@@ -148,4 +148,25 @@ void rotateLeft(bool doLights)
   driveBreak(false);
   driveRightWheel(actualSpeed);
   reverseLeftWheel();
+}
+
+void driveAdvanced(int error)
+{
+  // Calculating turns
+  int motorSpeed = KP * error + KD * (error - lastError);
+  lastError = error;
+
+  // Calculating motor speeds
+  int m1Speed = 255 + motorSpeed;
+  int m2Speed = 255 - motorSpeed;
+
+  // Min and max speeds 
+  m1Speed = min(max(m1Speed, 0), 255);
+  m2Speed = min(max(m2Speed, 0), 255);
+
+  // starting
+  analogWrite(leftWheelBwd, 0);
+  analogWrite(rightWheelBwd, 0);
+  analogWrite(leftWheelFwd, m1Speed);
+  analogWrite(rightWheelFwd, m2Speed);
 }

@@ -2,70 +2,21 @@
 #include <QTRSensors.h>
 #include "Wheels.hpp"
 
-const int LINE_HISTORY_LENGTH = 250;
-const int ERROR_THRESHOLD = 100;
-const int CALIBRATION_DISTANCE = 28;
 QTRSensors qtr;
 uint16_t sensors[8];
 int lineReadData;
-int* lineReadDataHistory;
-
-int lineHistoryTotal()
-{
-  int totalLineHistory = 0;
-  for (int i = LINE_HISTORY_LENGTH; i > 0; i--) {
-    totalLineHistory += lineReadDataHistory[i];
-  }
-  return totalLineHistory;
-}
 
 void readLine()
 {
   lineReadData = qtr.readLineBlack(sensors);
-  for (int i = LINE_HISTORY_LENGTH; i > 0; i--) {
-    lineReadDataHistory[i] = lineReadDataHistory[i-1];
-  }
-  lineReadDataHistory[0] = lineReadData;
 }
-
-void clearHistory()
-{
-  for (int i = 0; i < LINE_HISTORY_LENGTH; i++)
-  {
-    lineReadDataHistory[i] = 0;
-  }
-}
-
-int historyCount(int value)
-{
-  int count = 0;
-  for (int i = 0; i < LINE_HISTORY_LENGTH; i++)
-  {
-    if (lineReadDataHistory[i] == value)
-    {
-      count++;
-    }
-  }
-  return count;
-}
-
-int darkHistory()
-{
-  return 7000 * (ERROR_THRESHOLD / 100) * LINE_HISTORY_LENGTH * 1000000000;
-}
-
-bool hasSeenMostlyBlack()
-{
-  return lineHistoryTotal() >= darkHistory();
-}
-
 
 void setupSensors()
 {    
   // Line Sensor
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]) {A6,A0,A7,A1,A2,A3,A4,A5},8);
-  lineReadDataHistory = new int[LINE_HISTORY_LENGTH];
+  openGripper();
     
   // Calibration
   while (wheelSensorCounter < CALIBRATION_DISTANCE)
@@ -78,8 +29,13 @@ void setupSensors()
     qtr.calibrate();
     readLine();
     readRightWheelSensor();
-    closeGripper();
   }
+  closeGripper();
   wheelSensorCounter = 0;
   actualSpeed = 255;
+}
+
+bool readBlackLine()
+{
+  return (sensors[0] > BLACK_THRESHOLD) && (sensors[1] > BLACK_THRESHOLD) && (sensors[2] > BLACK_THRESHOLD) && (sensors[3] > BLACK_THRESHOLD) && (sensors[4] > BLACK_THRESHOLD) && (sensors[5] > BLACK_THRESHOLD) && (sensors[6] > BLACK_THRESHOLD) && (sensors[7] > BLACK_THRESHOLD);
 }

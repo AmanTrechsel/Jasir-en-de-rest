@@ -1,8 +1,9 @@
+#include "Config.hpp"
+
 // Clicker
 const int echo = 12; // Speaker
 const int trig = 13; // Microphone
 long duration;
-int distance;
 
 void setupEcho()
 {

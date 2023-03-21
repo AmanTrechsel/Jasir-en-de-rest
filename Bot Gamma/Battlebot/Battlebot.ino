@@ -1,23 +1,25 @@
 // Libraries
 #include "Tone.hpp"
-#include "Sensors.hpp"
 
-
-// Loop Counter
+// Timers
 int loopCounter;
 int funTimer;
 int funSongTimer;
+int blackLineTimer;
 
-// Please remove
+// States
 bool haveFun = false;
+bool seenBlack = false;
+bool avoidingObstacle = false;
 
 void setup()
 {    
   // Setup all included scripts
-  setupTone();
   setupWheels();
   setupNeoPixel();
   setupGripper();
+  setupBluetooth();
+  setupTone();
 
   openGripper();
   actualSpeed = 255;
@@ -44,20 +46,17 @@ void setup()
   delay(500);
   
   driveBreak(false);
-  // Clear history
-  clearHistory();
-  
 }
 
 void loop()
 {
-  playTone(loopCounter);
+  // NEO clear
+  neoClear();
 
   if (haveFun)
   {
     if (millis() >= funTimer)
     {
-      neoPixel.clear();
       neoFrontLeft(random(150),random(150),random(150));
       neoFrontRight(random(150),random(150),random(150));
       neoBackLeft(random(150),random(150),random(150));
@@ -72,74 +71,66 @@ void loop()
       funSongTimer = millis() + playFinish();
     }
   }
+  else if (avoidingObstacle)
+  {
+    int turnAmt = loopCounter / TURN_DISTANCE * 3500;
+    driveAdvanced(turnAmt - 3500);
+    if (loopCounter >= TURN_DISTANCE * 2) { avoidingObstacle = false; }
+  }
   else
   {
-    // NEO clear
-    neoClear();
+    playTone(loopCounter);
 
-    // Get the distance to anything in front of it
-    distance = getDistance();
+    // Avoid obstacles if anything is in front of it
+    if (getDistance() <= OBSTACLE_DISTANCE)
+    {
+      avoidingObstacle = true;
+      loopCounter = -1;
+    }
 
     // Check the sensors and output the values
     readLine();
 
-    if (hasSeenMostlyBlack())
+    if (readBlackLine())
     {    
-      
-      if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] > 980))
+      if (seenBlack)
       {
-        neoFull(128,128,128);
-        driveBreak(false);
-        openGripper();
-        delay(400);
-        reverseLeftWheel();
-        reverseRightWheel();
-        delay(400);
-        driveBreak(false);
-        delay(400);
-        haveFun = true;
-        playFinish();
+        if (blackLineTimer < millis())
+        {
+          seenBlack = false;
+          if (readBlackLine())
+          {
+            neoFull(128,128,128);
+            driveBreak(false);
+            openGripper();
+            delay(400);
+            reverseLeftWheel();
+            reverseRightWheel();
+            delay(400);
+            driveBreak(false);
+            delay(400);
+            haveFun = true;
+            playFinish();
+          }
+          else
+          {
+            rotateRight(false);
+          }
+        }
       }
       else
       {
-        if ((sensors[0] > 980) && (sensors[1] > 980) && (sensors[2] > 980) && (sensors[3] > 980) && (sensors[4] > 980) && (sensors[5] > 980) && (sensors[6] > 980) && (sensors[7] < 980))
-        {
-          rotateLeft(true);
-        }
-        else
-        {
-          rotateRight(true);
-        }
+        seenBlack = true;
+        blackLineTimer = BLACK_LINE_TIMEOUT + millis();
       }
     }
     else
     {
       neoFull(random(150),random(150),random(150));
-      // Calculating turns
-      int error = lineReadData - 3500;
-
-      int motorSpeed = KP * error + KD * (error - lastError);
-      lastError = error;
-
-      // Calculating motor speeds
-      int m1Speed = 255 + motorSpeed;
-      int m2Speed = 255 - motorSpeed;
-
-      // Min and max speeds 
-      m1Speed = min(max(m1Speed, 0), 255);
-      m2Speed = min(max(m2Speed, 0), 255);
-
-      // starting
-      analogWrite(leftWheelBwd, 0);
-      analogWrite(rightWheelBwd, 0);
-      analogWrite(leftWheelFwd, m1Speed);
-      analogWrite(rightWheelFwd, m2Speed);
+      driveAdvanced(lineReadData - 3500);
     }
-
     readRightWheelSensor();
-  
-  
-    // Increment loop counter
-    loopCounter += 1;
   }
+  // Increment loop counter
+  loopCounter += 1;
 }

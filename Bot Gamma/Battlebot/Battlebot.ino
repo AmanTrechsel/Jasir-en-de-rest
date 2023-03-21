@@ -6,11 +6,13 @@ int loopCounter;
 int funTimer;
 int funSongTimer;
 int blackLineTimer;
+int rotateTimer;
 
 // States
 bool haveFun = false;
 bool seenBlack = false;
 bool avoidingObstacle = false;
+bool rotating = false;
 
 void setup()
 {    
@@ -36,7 +38,7 @@ void setup()
   driveBreak(true);
   rotateLeft(true);
 
-  while (wheelSensorCounter < 30)
+  while (wheelSensorCounter < 50)
   {
     readRightWheelSensor();
     delay(10);
@@ -73,7 +75,7 @@ void loop()
   }
   else if (avoidingObstacle)
   {
-    int turnAmt = loopCounter / TURN_DISTANCE * 3500;
+    int turnAmt = abs(loopCounter / TURN_DISTANCE * 3500);
     driveAdvanced(turnAmt - 3500);
     if (loopCounter >= TURN_DISTANCE * 2) { avoidingObstacle = false; }
   }
@@ -85,7 +87,7 @@ void loop()
     if (getDistance() <= OBSTACLE_DISTANCE)
     {
       avoidingObstacle = true;
-      loopCounter = -1;
+      loopCounter = -TURN_DISTANCE;
     }
 
     // Check the sensors and output the values
@@ -114,7 +116,9 @@ void loop()
           }
           else
           {
-            rotateRight(false);
+            rotateRight2();
+            rotateTimer = ROTATE_DELAY + millis();
+            rotating = true;
           }
         }
       }
@@ -126,11 +130,22 @@ void loop()
     }
     else
     {
-      neoFull(random(150),random(150),random(150));
+      if (sensors[5] >= BLACK_THRESHOLD || sensors[6] >= BLACK_THRESHOLD || sensors[7] >= BLACK_THRESHOLD)
+      {
+        rotateRight2();
+        rotateTimer = ROTATE_DELAY + millis();
+        rotating = true;
+      }      
+    }
+    
+    neoFull(random(150),random(150),random(150));
+    if (!rotating || rotateTimer <= millis() || (lineReadData != 0 && rotateTimer - ROTATE_DELAY/2 <= millis()))
+    {
       driveAdvanced(lineReadData - 3500);
+      rotating = false;
     }
     readRightWheelSensor();
   }
   // Increment loop counter
-  loopCounter += 1;
+  loopCounter = (loopCounter+1)%10000;
 }

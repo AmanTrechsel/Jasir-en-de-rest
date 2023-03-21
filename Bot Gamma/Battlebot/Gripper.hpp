@@ -1,7 +1,7 @@
 // Gripper
 const int gripper = 10;
-const int closedAngle = 180;
-const int openedAngle = 130;
+const int closedAngle = 130;
+const int openedAngle = 180;
 
 void setupGripper()
 {

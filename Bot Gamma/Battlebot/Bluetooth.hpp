@@ -14,7 +14,7 @@ void setupBluetooth()
   while (!canStart)
   {
     // Since we don't have working Bluetooth just set it to true after 1000 tries
-    if (i >= 1000)
+    if (i >= 30000)
     {
       canStart = true;
     }
@@ -22,27 +22,28 @@ void setupBluetooth()
     if (bluetoothSerial.available() > 0)
     {
       canStart = bluetoothSerial.read();
-      if (i%10 == 0)
-      {
-        neoClear();
-        switch (i%4)
-        {
-          case 0:
-            neoFrontLeft(0,10,30);
-            break;
-          case 1:
-            neoFrontRight(0,10,30);
-            break;
-          case 2:
-            neoBackLeft(0,10,30);
-            break;
-          case 3:
-            neoBackRight(0,10,30);
-            break;
-        }
-      }
-      i++;
     }
+    // Flare
+    if (i%10005 == 0)
+    {
+      neoClear();
+      switch (i%4)
+      {
+        case 0:
+          neoFrontLeft(0,10,30);
+          break;
+        case 1:
+          neoFrontRight(0,10,30);
+          break;
+        case 2:
+          neoBackLeft(0,10,30);
+          break;
+        case 3:
+          neoBackRight(0,10,30);
+          break;
+      }
+    }
+    i++;
   }
   
 }

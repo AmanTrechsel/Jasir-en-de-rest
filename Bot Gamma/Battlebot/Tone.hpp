@@ -46,36 +46,20 @@ void setupTone()
   for (int i = 0; i < 31; i++)
   {
     neoPixel.clear();
-    if (i < 21)
+    switch (i%4)
     {
-      switch (i%4)
-      {
-        case 0:
-          neoFrontLeft(70,50,0);
-          break;
-        case 1:
-          neoFrontRight(70,50,0);
-          break;
-        case 2:
-          neoBackLeft(70,50,0);
-          break;
-        case 3:
-          neoBackRight(70,50,0);
-          break;
-      }
-    }
-    else
-    {
-      if (i%2 == 0)
-      {
-        neoFrontLeft(150,120,0);
-        neoFrontRight(150,120,0);
-      }
-      else
-      {
-        neoBackLeft(150,120,0);
-        neoBackRight(150,120,0);
-      }
+      case 0:
+        neoFrontLeft(70,50,0);
+        break;
+      case 1:
+        neoFrontRight(70,50,0);
+        break;
+      case 2:
+        neoBackLeft(70,50,0);
+        break;
+      case 3:
+        neoBackRight(70,50,0);
+        break;
     }
     int noteDuration = 1000 / noteDurations[i] * 1.5;
     tone(tonePin, melody[i], noteDuration);
@@ -93,11 +77,11 @@ void playTone(int loopCounter)
   {
     if (currentTone)
     {
-      tone(tonePin, NOTE_FS3, 125);
+      tone(tonePin, NOTE_FS4, 125);
     } 
     else
     {
-      tone(tonePin, NOTE_FS2, 125);
+      tone(tonePin, NOTE_FS3, 125);
     } 
     currentTone = !currentTone;  
   }

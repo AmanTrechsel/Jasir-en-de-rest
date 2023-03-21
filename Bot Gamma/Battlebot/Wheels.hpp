@@ -25,16 +25,6 @@ int lastWheelSensor = 0;
 //rotatedLeftLast
 bool rotatedLeftLast;
 
-void setupWheels()
-{    
-  // Wheels
-  pinMode(leftWheelFwd, OUTPUT);
-  pinMode(leftWheelBwd, OUTPUT);
-  pinMode(rightWheelFwd, OUTPUT);
-  pinMode(rightWheelBwd, OUTPUT);
-  pinMode(rightWheelSensor, INPUT);
-}
-
 void readRightWheelSensor()
 {
   if (analogRead(rightWheelSensor) != lastWheelSensor)
@@ -72,13 +62,13 @@ void driveFwd(bool doLights)
 void reverseLeftWheel()
 {
   analogWrite(leftWheelFwd, 0);
-  analogWrite(leftWheelBwd, actualSpeed);
+  analogWrite(leftWheelBwd, 180);
 }
 
 void reverseRightWheel()
 {
   analogWrite(rightWheelFwd, 0);
-  analogWrite(rightWheelBwd, actualSpeed);
+  analogWrite(rightWheelBwd, 180);
 }
 
 void driveBwd(bool doLights)
@@ -150,6 +140,20 @@ void rotateLeft(bool doLights)
   reverseLeftWheel();
 }
 
+void rotateRight2()
+{
+  driveBreak(false);
+  driveLeftWheel(actualSpeed);
+  driveRightWheel(150);
+}
+
+void rotateLeft2()
+{
+  driveBreak(false);
+  driveRightWheel(actualSpeed);
+  driveLeftWheel(150);
+}
+
 void driveAdvanced(int error)
 {
   // Calculating turns
@@ -169,4 +173,15 @@ void driveAdvanced(int error)
   analogWrite(rightWheelBwd, 0);
   analogWrite(leftWheelFwd, m1Speed);
   analogWrite(rightWheelFwd, m2Speed);
+}
+
+void setupWheels()
+{    
+  // Wheels
+  pinMode(leftWheelFwd, OUTPUT);
+  pinMode(leftWheelBwd, OUTPUT);
+  pinMode(rightWheelFwd, OUTPUT);
+  pinMode(rightWheelBwd, OUTPUT);
+  pinMode(rightWheelSensor, INPUT);
+  driveBreak(false);
 }

@@ -13,4 +13,9 @@ const int BLACK_THRESHOLD = 980;
 // How long it takes to turn around an obstacle
 const int TURN_DISTANCE = 1000;
 
-const int ROTATE_DELAY = 300;
+// Time to guarantee a rotation
+const int ROTATE_DELAY = 400;
+
+// Center line value range
+const int MIN_CENTER_VALUE = 3000;
+const int MAX_CENTER_VALUE = 4000;

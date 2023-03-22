@@ -3,10 +3,10 @@
 
 // Timers
 int loopCounter;
-int funTimer;
-int funSongTimer;
-int blackLineTimer;
-int rotateTimer;
+unsigned long funTimer;
+unsigned long funSongTimer;
+unsigned long blackLineTimer;
+unsigned long rotateTimer;
 
 // States
 bool haveFun = false;
@@ -38,10 +38,11 @@ void setup()
   driveBreak(true);
   rotateLeft(true);
 
-  while (wheelSensorCounter < 50)
+  delay(ROTATE_DELAY);
+  while (lineReadData > MIN_CENTER_VALUE && lineReadData < MAX_CENTER_VALUE)
   {
-    readRightWheelSensor();
-    delay(10);
+    // Check the sensors and output the values
+    readLine();
   }
   driveBreak(true);
   driveFwd(true);

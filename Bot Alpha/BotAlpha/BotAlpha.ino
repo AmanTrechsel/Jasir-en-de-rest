@@ -36,7 +36,7 @@ const int echoPin = 13;
 float duration;
 float distance;
 
-int interval = 333; // In ms
+int interval = 250; // In ms
 unsigned long time_now = 0;
 
 // Variables - Sensor Calibration
@@ -177,7 +177,7 @@ void moveForward(int steps, int mspeed)
     }
     if (steps > R2_Count) 
     {
-      analogWrite(rightWheelFwd, mspeed - 12); // Small correction, so that the wheels spin at the same speed
+      analogWrite(rightWheelFwd, mspeed - 8); // Small correction, so that the wheels spin at the same speed
     } 
     else 
     {
@@ -277,7 +277,7 @@ void rotateRight(int steps, int mspeed)
     if (steps > R1_Count) 
     {
       analogWrite(leftWheelFwd, mspeed);
-      analogWrite(rightWheelFwd, 60);
+      analogWrite(rightWheelFwd, 100);
     } 
     else 
     {
@@ -331,11 +331,11 @@ void avoidObjects()
     distance = duration * 0.0343 / 2; // In CM
 
     // Avoid object
-    if (distance <= 18)
+    if (distance <= 20) 
     {
       rotateLeft(10, 255);
       moveForward(CMtoSteps(16), 255);
-      rotateRight(38, 255);
+      rotateRight(50, 255);
     }
   }
 }

@@ -1,3 +1,4 @@
+#include <FastLED.h>
 
 const int motorA1 = 10; // the first pin that is connected to motor A (the left motor)
 const int motorA2 = 9; // the second pin that is connected to motor A (the left motor)
@@ -15,11 +16,14 @@ int pos = 0;
 int speed;
 int turnValue;
 
+#define LED_PIN 11
+#define NUM_LEDS 4
+CRGB leds[NUM_LEDS];
+
 long duration; // the time it takes for the echo to be detected
-boolean turnedAround = true;
 
 int distance;
-const int minSafeDistance = 20;
+const int minSafeDistance = 25;
 
 
 
@@ -38,27 +42,49 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(sensorMotor1), count1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(sensorMotor2), count2, CHANGE);
 
+  FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS);
+  FastLED.setMaxPowerInVoltsAndMilliamps(5, 500);
+  FastLED.clear();
+  FastLED.show();
+
 }
 
-void loop() {
+void loop() 
+{
+  solveMaze();
+}
+
+void solveMaze()
+{
+
+  miiMusic();
+/*
   counter2 = 0;
   counter1 = 0;
   brake();
+  lightsRight();
   rightScan();
   delay(500);
   echoSensor();
   if (distance < minSafeDistance)
   {
+    lightsBad();
+    delay(200);
+    lightsFront();
     frontScan();
     delay(500);
     echoSensor();
     if (distance < minSafeDistance)
     {
+      lightsBad();
+      delay(200);
+      lightsLeft();
       leftScan();
       delay(500);
       echoSensor();
       if (distance > minSafeDistance)
       {
+        lightsGood();
         brake();
         startUp();
         counter1 = 0;
@@ -69,6 +95,7 @@ void loop() {
       }
       else
       {
+        lightsBad();
         brake();
         turnAround();
         counter2 = 0;
@@ -78,6 +105,7 @@ void loop() {
     }
     else
     {
+      lightsGood();
       counter2 = 0;
       brake();
       startUp();
@@ -88,6 +116,7 @@ void loop() {
   }
   else
   {
+    lightsGood();
     brake();
     startUp();
     counter2 = 0;
@@ -96,15 +125,66 @@ void loop() {
     turnValue = 30;
     moveForward();
   }
+  */
 }
 
-void a()
+
+// neo pixel methods //
+
+void lightsGood()
 {
-  analogWrite(motorA1, 0);
-  analogWrite(motorA2, 150);
-  analogWrite(motorB1, 0);
-  analogWrite(motorB2, 150);
+    FastLED.setBrightness(255);
+    leds[0] = CRGB(0, 255, 0);
+    leds[1] = CRGB(0, 255, 0);
+    leds[2] = CRGB(0, 255, 0);
+    leds[3] = CRGB(0, 255, 0);
+    FastLED.show();
 }
+
+void lightsRight() 
+{
+  FastLED.setBrightness(255);
+  leds[2] = CRGB(255, 165, 0);
+  leds[1] = CRGB(255, 165, 0);
+  leds[3] = CRGB(0, 0, 0);
+  leds[0] = CRGB(0, 0, 0);
+  FastLED.show();
+}
+
+void lightsBad()
+{
+  FastLED.setBrightness(255);
+  leds[0] = CRGB(255, 0, 0);
+  leds[1] = CRGB(255, 0, 0);
+  leds[2] = CRGB(255, 0, 0);
+  leds[3] = CRGB(255, 0, 0);
+  FastLED.show();
+}
+
+void lightsLeft()
+{
+  FastLED.setBrightness(255);
+  leds[0] = CRGB(255, 165, 0);
+  leds[3] = CRGB(255, 165, 0);
+  leds[1] = CRGB(0, 0, 0);
+  leds[2] = CRGB(0, 0, 0);
+  FastLED.show();
+}
+
+void lightsFront()
+{
+  FastLED.setBrightness(255);
+  leds[2] = CRGB(255, 165, 0);
+  leds[3] = CRGB(255, 165, 0);
+  leds[0] = CRGB(0, 0, 0);
+  leds[1] = CRGB(0, 0, 0);
+  FastLED.show();
+}
+
+//**********************//
+
+// movment methods //
+
 void moveForward()
 {
   while (counter2 < turnValue)
@@ -119,9 +199,8 @@ void turnAround()
 {
   leftTurn();
   brake();
-  delay(500);
-  turnValue = 35;
-  turnRight();
+  delay(200);
+  rightTurn();
 }
 
 void turnLeft()
@@ -141,6 +220,16 @@ void turnRight()
   {
     speed = 200;
     leftForward();
+  }
+}
+
+void rightTurn()
+{
+  turnValue = 35;
+  while (counter2 < turnValue)
+  {
+    speed = 200;
+    rightForward();
   }
 }
 
@@ -165,14 +254,6 @@ void startUp()
   }
 }
 
-void count1() {
-  counter1++;
-}
-
-void count2() {
-  counter2++;
-}
-
 void rightBrake () {
   digitalWrite(motorB1, HIGH);
   digitalWrite(motorB2, HIGH);
@@ -182,6 +263,53 @@ void leftBrake () {
   digitalWrite(motorA1, HIGH);
   digitalWrite(motorA2, HIGH);
 }
+
+void brake() {
+  digitalWrite(motorA1, HIGH);
+  digitalWrite(motorA2, HIGH);
+  digitalWrite(motorB1, HIGH);
+  digitalWrite(motorB2, HIGH);
+}
+
+void leftForward()
+{
+  analogWrite(motorA1, 0);
+  analogWrite(motorA2, speed - 3);
+}
+
+void rightForward()
+{
+  analogWrite(motorB1, 0);
+  analogWrite(motorB2, speed);
+}
+
+void leftBackward()
+{
+  analogWrite(motorA1, speed);
+  analogWrite(motorA2, 0);
+}
+
+void rightBackward()
+{
+  analogWrite(motorB1, speed);
+  analogWrite(motorB2, 0);
+}
+
+//*****************//
+
+// counter methods //
+
+void count1() {
+  counter1++;
+}
+
+void count2() {
+  counter2++;
+}
+
+//******************//
+
+// echosensor methods //
 
 void leftScan () 
 {
@@ -229,33 +357,4 @@ void echoSensor () {
   delay(10);
 }
 
-void brake() {
-  digitalWrite(motorA1, HIGH);
-  digitalWrite(motorA2, HIGH);
-  digitalWrite(motorB1, HIGH);
-  digitalWrite(motorB2, HIGH);
-}
-
-void leftForward()
-{
-  analogWrite(motorA1, 0);
-  analogWrite(motorA2, speed - 3);
-}
-
-void rightForward()
-{
-  analogWrite(motorB1, 0);
-  analogWrite(motorB2, speed);
-}
-
-void leftBackward()
-{
-  analogWrite(motorA1, speed);
-  analogWrite(motorA2, 0);
-}
-
-void rightBackward()
-{
-  analogWrite(motorB1, speed);
-  analogWrite(motorB2, 0);
-}
+//****************//

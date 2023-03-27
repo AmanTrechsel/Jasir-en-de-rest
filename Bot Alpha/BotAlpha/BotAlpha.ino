@@ -8,7 +8,8 @@
 
 // Libraries
 #include <QTRSensors.h> // Library for the reflectance sensors
-#include "PinkPanther.h" // Song
+#include "PinkPanther.h" // Song when done. Imported from: https://github.com/robsoncouto/arduino-songs. 
+#include "Despacito.h" // Song before calibrating. Imported from: https://drive.google.com/drive/folders/1KLxsYMhxKcrYebu6URIVcto2w0aXARA2.
 #include "LightShow.h" // Led
 
 // Constants - Wheels
@@ -102,6 +103,7 @@ void setup()
   pinMode(echoPin, INPUT);
   
   // Calibrate sensors
+  Despacito();
   calibrateSensors();
 }
 
@@ -131,6 +133,7 @@ void loop()
     else
     {
       brake();
+      delay(3000);
       PinkPanther();
     }
 }

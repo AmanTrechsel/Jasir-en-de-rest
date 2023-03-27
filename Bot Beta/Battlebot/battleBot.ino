@@ -1,5 +1,7 @@
 #include <FastLED.h>
 #include <QTRSensors.h>
+#include "music2.h" // finish song
+#include "music1.h" //start song
 
 // variables for the wheels //
 
@@ -84,7 +86,6 @@ void setup() {
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 500);
   FastLED.clear();
   FastLED.show();
-
   frontScan();
   delay(500);
   echoSensor();
@@ -95,6 +96,8 @@ void setup() {
     lightsBad();
     delay(100);
     echoSensor();
+    startMusic();
+    delay(10000);
   }
     brake();
     delay(2000);

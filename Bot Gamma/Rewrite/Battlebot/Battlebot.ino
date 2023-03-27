@@ -4,21 +4,22 @@
 #include "Melodies.h"
 
 // Constants
-const int CALIBRATION_DRIVE_DISTANCE = 20;
-const int CALIBRATION_DRIVE_SPEED = 200;
+const int CALIBRATION_DRIVE_DISTANCE = 25;
+const int CALIBRATION_DRIVE_SPEED = 150;
 const int START_DRIVE_DISTANCE = 20; // Distance to travel to exit the start square
 const int KICK_DRIVE_SPEED = 255;
 const int KICK_DRIVE_DELAY = 100;
-const int INTERSECTION_CHECK_DRIVE_DISTANCE = 10;
+const int INTERSECTION_CHECK_DRIVE_DISTANCE = 40;
 const int BASE_DRIVE_SPEED = 200;
 const int BASE_ROTATION_SPEED = 170; // Speed at which to rotate at default
-const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 0.9; // Multiplier to the right wheel since the left wheel is weaker
-const float WHEEL_ROTATION_TICK_DEGREES = 8.5; // Degrees the bot rotates per 'tick'
+const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 1; // Multiplier to the right wheel since the left wheel is weaker
+const float WHEEL_ROTATION_TICK_DEGREES = 13; // Degrees the bot rotates per 'tick'
 const int CALIBRATION_CORRECTION_VALUE = 100; // An error factor that is added/removed for the white/black thresholds
 const int ROTATION_CORRECTION_DRIVE_DISTANCE = 31; // Distance to drive forward in order to compensate for a 90 degree turn
-const int START_SIGNAL_DISTANCE = 20; // Distance it needs to see in order to start
-const int START_SIGNAL_WAIT = 5000; // Time to wait once it has received its start signal (in milliseconds)
+const int START_SIGNAL_DISTANCE = 30; // Distance it needs to see in order to start
+const int START_SIGNAL_WAIT = 2000; // Time to wait once it has received its start signal (in milliseconds)
 const int DRIVING_LIGHTS_TIME = 100; // Time in milliseconds between switching the lights while driving normally
+const int MARIO_MELODY_AWAIT = 5000; // Time in milliseconds to wait before starting to play the mario tune
 // Range of sensors to check for left turns
 const int LEFT_RANGE_MIN = 0;
 const int LEFT_RANGE_MAX = 2;
@@ -62,7 +63,6 @@ int wheelSensorCounterLast;
 Adafruit_NeoPixel neo(4, PIN_NEO_PIXEL, NEO_RGB + NEO_KHZ800);
 
 // States
-bool driving;
 bool checkedBlack;
 bool finished;
 
@@ -96,6 +96,7 @@ void setup()
   qtr.setSensorPins((const uint8_t[]) {A6,A0,A7,A1,A2,A3,A4,A5},8);
 
   // Await start
+  delay(1000);
   unsigned int waitCounter = 0;
   int waitColor = 0;
   int waitColorLast = 0;
@@ -209,7 +210,7 @@ void setup()
     }
   }
   closeGripper();
-  rotateWheels(90, CALIBRATION_DRIVE_SPEED, 0);
+  rotateWheels(-90, CALIBRATION_DRIVE_SPEED, 0);
   driveForward(CALIBRATION_DRIVE_SPEED);
   resetWheelCounters();
   while (wheelSensorCounter < START_DRIVE_DISTANCE)
@@ -238,7 +239,7 @@ void setup()
 // Loop
 void loop()
 {
-  tone(PIN_TONE, random(4947)+31);
+  //tone(PIN_TONE, random(4947)+31);
   readLine();
   if (finished)
   {
@@ -246,7 +247,8 @@ void loop()
     breakWheels();
     analogWrite(PIN_RIGHT_WHEEL_FORWARD, KICK_DRIVE_SPEED);
     analogWrite(PIN_LEFT_WHEEL_BACKWARD, KICK_DRIVE_SPEED);
-    unsigned long timerMarioMelody = 0;
+    unsigned long timerMarioMelody = millis() + MARIO_MELODY_AWAIT;
+    songPosition = 0;
     while (true)
     {
       if (millis() >= timerMarioMelody)
@@ -262,59 +264,55 @@ void loop()
   }
   else
   {
-    if (!driving)
+    if (readBlackLine())
     {
-      drivePID(BASE_DRIVE_SPEED);
-      driving = true;
-    }
-    else
-    {
+      resetWheelCounters();
+      while (wheelSensorCounter < INTERSECTION_CHECK_DRIVE_DISTANCE)
+      {
+        readLine();
+        readWheels();
+      }
       if (readBlackLine())
       {
+        noTone(PIN_TONE);
+        neoFull(128,128,128);
+        breakWheels();
+        openGripper();
+        delay(400);
+        driveBackward(BASE_DRIVE_SPEED);
+        delay(400);
+        breakWheels();
+        delay(400);
+        finished = true;
+        breakWheels();
+      }
+      else
+      {
+        driveBackward(BASE_DRIVE_SPEED);
         resetWheelCounters();
         while (wheelSensorCounter < INTERSECTION_CHECK_DRIVE_DISTANCE)
         {
           readLine();
           readWheels();
         }
-        if (readBlackLine())
-        {
-          noTone(PIN_TONE);
-          neoFull(128,128,128);
-          breakWheels();
-          openGripper();
-          delay(400);
-          driveBackward(BASE_DRIVE_SPEED);
-          delay(400);
-          breakWheels();
-          delay(400);
-          finished = true;
-          breakWheels();
-        }
-        else
-        {
-          driveBackward(BASE_DRIVE_SPEED);
-          resetWheelCounters();
-          while (wheelSensorCounter < INTERSECTION_CHECK_DRIVE_DISTANCE)
-          {
-            readLine();
-            readWheels();
-          }
-          rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
-        }
-      }
-      else if (readWhiteLine())
-      {
         rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
       }
-      else if (readRightLine())
-      {
-        rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
-      }
-      else if (readLeftLine())
-      {
-        rotateWheels(-90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
-      }
+    }
+    else if (readRightLine())
+    {
+      rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+    }
+    else if (readLeftLine())
+    {
+      rotateWheels(-90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+    }
+    else if (readWhiteLine())
+    {
+      rotateWheels(180, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+    }
+    else
+    {
+      drivePID(BASE_DRIVE_SPEED);
     }
   }
 }
@@ -334,6 +332,7 @@ bool readBlackLine()
 
 bool readWhiteLine()
 {
+  return lineReadData==0;
   for (int i = 0; i < 8; i++)
   {
     if (sensors[i] > whiteThreshold)
@@ -463,7 +462,6 @@ void rotateWheels(int degrees, int speed, int compensation_distance)
       readWheels();
     }
   }
-  driving = false;
   breakWheels();
 }
 
@@ -479,8 +477,8 @@ void drivePID(int speed)
   int m2Speed = speed - motorSpeed;
 
   // Min and max speeds 
-  m1Speed = min(max(m1Speed, 0), 255);
-  m2Speed = min(max(m2Speed, 0), 255);
+  m1Speed = min(max(m1Speed, 0), speed);
+  m2Speed = min(max(m2Speed, 0), speed);
 
   // Actually drive
   analogWrite(PIN_LEFT_WHEEL_BACKWARD, 0);

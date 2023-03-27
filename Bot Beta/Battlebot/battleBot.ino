@@ -1,31 +1,50 @@
 #include <FastLED.h>
 
+// variables for the wheels //
+
 const int motorA1 = 10; // the first pin that is connected to motor A (the left motor)
 const int motorA2 = 9; // the second pin that is connected to motor A (the left motor)
 const int motorB1 = 6; // the first pin that is connected to motor B (the right motor)
 const int motorB2 = 5; // the second pin that is connected to motor B (the right motor)
 const int sensorMotor1 = 3; // rotation sensor for motor B (the right motor)
 const int sensorMotor2 = 2; // rotation sensor for motor A (the left motor)
+
+//*************************//
+
+// variables for the echosensor //
+
 const int scanner = 12; // servo under the echoSensor
-const int gripper = 4;
 const int trigPin = 7; // the pin that is connected to the trigger of the ultra sonic sensor
 const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
-int counter1 = 0;
-int counter2 = 0;
-int pos = 0;
-int speed;
-int turnValue;
+long duration; // the time it takes for the echo to be detected
+int distance; // the distance between the echoSensor and an object
+const int minSafeDistance = 25; // the minimum safe distance for the battle bot to be from a wall 
+
+//***************************//
+
+// variables for the gripper //
+
+const int gripper = 4; // the pin that is connected to the servo of the gripper
+
+//**************************//
+
+// variables for the counters //
+
+int counter1 = 0; // counter for the right wheel
+int counter2 = 0; // counter for the left wheel
+
+//*************************//
+
+// variables for movement //
+
+int speed; // the variable for the speed of the motors
+int movementValue; // the variable for the movement amount
+
+//*********************//
 
 #define LED_PIN 11
 #define NUM_LEDS 4
 CRGB leds[NUM_LEDS];
-
-long duration; // the time it takes for the echo to be detected
-
-int distance;
-const int minSafeDistance = 25;
-
-
 
 void setup() {
   pinMode(motorA1, OUTPUT);
@@ -56,9 +75,6 @@ void loop()
 
 void solveMaze()
 {
-
-  miiMusic();
-/*
   counter2 = 0;
   counter1 = 0;
   brake();
@@ -90,7 +106,7 @@ void solveMaze()
         counter1 = 0;
         turnLeft();
         counter2 = 0;
-        turnValue = 30;
+        movementValue = 30;
         moveForward();    
       }
       else
@@ -99,7 +115,7 @@ void solveMaze()
         brake();
         turnAround();
         counter2 = 0;
-        turnValue = 12;
+        movementValue = 12;
         moveForward();
       }
     }
@@ -110,7 +126,7 @@ void solveMaze()
       brake();
       startUp();
       counter2 = 0;
-      turnValue = 52;
+      movementValue = 52;
       moveForward();
     }
   }
@@ -122,10 +138,9 @@ void solveMaze()
     counter2 = 0;
     turnRight();
     counter2 = 0;
-    turnValue = 30;
+    movementValue = 30;
     moveForward();
   }
-  */
 }
 
 
@@ -187,7 +202,7 @@ void lightsFront()
 
 void moveForward()
 {
-  while (counter2 < turnValue)
+  while (counter2 < movementValue)
   {
     speed = 225;
     leftForward();
@@ -205,8 +220,8 @@ void turnAround()
 
 void turnLeft()
 {
-  turnValue = 37;
-  while (counter2 < turnValue)
+  movementValue = 37;
+  while (counter2 < movementValue)
   {
     speed = 200;
     rightForward();
@@ -215,8 +230,8 @@ void turnLeft()
 
 void turnRight()
 {
-  turnValue = 37;
-  while (counter1 < turnValue)
+  movementValue = 37;
+  while (counter1 < movementValue)
   {
     speed = 200;
     leftForward();
@@ -225,8 +240,8 @@ void turnRight()
 
 void rightTurn()
 {
-  turnValue = 35;
-  while (counter2 < turnValue)
+  movementValue = 35;
+  while (counter2 < movementValue)
   {
     speed = 200;
     rightForward();
@@ -235,8 +250,8 @@ void rightTurn()
 
 void leftTurn()
 {
-  turnValue = 40;
-  while (counter1 < turnValue)
+  movementValue = 40;
+  while (counter1 < movementValue)
   {
     speed = 200;
     leftBackward();
@@ -245,8 +260,8 @@ void leftTurn()
 
 void startUp()
 {
-  turnValue = 1;
-  while (counter2 < turnValue)
+  movementValue = 1;
+  while (counter2 < movementValue)
   {
     speed = 255;
     rightForward();

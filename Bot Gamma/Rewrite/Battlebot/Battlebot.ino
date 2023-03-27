@@ -9,12 +9,12 @@ const int CALIBRATION_DRIVE_SPEED = 150;
 const int START_DRIVE_DISTANCE = 20; // Distance to travel to exit the start square
 const int KICK_DRIVE_SPEED = 255;
 const int KICK_DRIVE_DELAY = 100;
-const int INTERSECTION_CHECK_DRIVE_DISTANCE = 40;
-const int BASE_DRIVE_SPEED = 200;
-const int BASE_ROTATION_SPEED = 170; // Speed at which to rotate at default
+const int INTERSECTION_CHECK_DRIVE_DISTANCE = 60;
+const int BASE_DRIVE_SPEED = 170;
+const int BASE_ROTATION_SPEED = 150; // Speed at which to rotate at default
 const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 1; // Multiplier to the right wheel since the left wheel is weaker
-const float WHEEL_ROTATION_TICK_DEGREES = 13; // Degrees the bot rotates per 'tick'
-const int CALIBRATION_CORRECTION_VALUE = 100; // An error factor that is added/removed for the white/black thresholds
+const float WHEEL_ROTATION_TICK_DEGREES = 20; // Degrees the bot rotates per 'tick'
+const int CALIBRATION_CORRECTION_VALUE = 50; // An error factor that is added/removed for the white/black thresholds
 const int ROTATION_CORRECTION_DRIVE_DISTANCE = 31; // Distance to drive forward in order to compensate for a 90 degree turn
 const int START_SIGNAL_DISTANCE = 30; // Distance it needs to see in order to start
 const int START_SIGNAL_WAIT = 2000; // Time to wait once it has received its start signal (in milliseconds)
@@ -22,9 +22,9 @@ const int DRIVING_LIGHTS_TIME = 100; // Time in milliseconds between switching t
 const int MARIO_MELODY_AWAIT = 5000; // Time in milliseconds to wait before starting to play the mario tune
 // Range of sensors to check for left turns
 const int LEFT_RANGE_MIN = 0;
-const int LEFT_RANGE_MAX = 2;
+const int LEFT_RANGE_MAX = 1;
 // Range of sensors to check for right turns
-const int RIGHT_RANGE_MIN = 5;
+const int RIGHT_RANGE_MIN = 6;
 const int RIGHT_RANGE_MAX = 7;
 // PID constants
 const float PROPORTIONAL_GAIN = 0.225;
@@ -345,6 +345,7 @@ bool readWhiteLine()
 
 bool readLeftLine()
 {
+   return lineReadData <= 1500;
   for (int i = LEFT_RANGE_MIN; i < LEFT_RANGE_MAX; i++)
   {
     if (sensors[i] >= blackThreshold)
@@ -357,6 +358,7 @@ bool readLeftLine()
 
 bool readRightLine()
 {
+   return lineReadData >= 5500;
   for (int i = RIGHT_RANGE_MIN; i < RIGHT_RANGE_MAX; i++)
   {
     if (sensors[i] >= blackThreshold)

@@ -1,4 +1,5 @@
 #include <FastLED.h>
+#include <QTRSensors.h>
 
 // variables for the wheels //
 
@@ -18,13 +19,16 @@ const int trigPin = 7; // the pin that is connected to the trigger of the ultra 
 const int echoPin = 8; // the pin that is connected to the echo of the ultra sonic sensor
 long duration; // the time it takes for the echo to be detected
 int distance; // the distance between the echoSensor and an object
-const int minSafeDistance = 25; // the minimum safe distance for the battle bot to be from a wall 
+const int minSafeDistance = 25; // the minimum safe distance for the battle bot to be from a wall
+const int startDistance = 30;
 
 //***************************//
 
 // variables for the gripper //
 
 const int gripper = 4; // the pin that is connected to the servo of the gripper
+const int gripperOpen = 1650;
+const int gripperClose = 1250;
 
 //**************************//
 
@@ -41,6 +45,18 @@ int speed; // the variable for the speed of the motors
 int movementValue; // the variable for the movement amount
 
 //*********************//
+
+// variables for line sensor //
+
+bool calibrationComplete = false; // Check if calibration succeeded
+const int calibrationTime = 26;
+const bool shouldCalibrate = true;
+QTRSensors qtr;
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
+
+//********************//
+
 
 #define LED_PIN 11
 #define NUM_LEDS 4
@@ -60,11 +76,46 @@ void setup() {
   Serial.begin(9600);
   attachInterrupt(digitalPinToInterrupt(sensorMotor1), count1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(sensorMotor2), count2, CHANGE);
+  
+  qtr.setTypeAnalog();
+  qtr.setSensorPins((const uint8_t[]){A6,A0,A1,A2,A3,A4,A5,A7}, SensorCount);
 
   FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS);
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 500);
   FastLED.clear();
   FastLED.show();
+
+  frontScan();
+  delay(500);
+  echoSensor();
+  while (distance > startDistance)
+  {
+    lightsGood();
+    delay(100);
+    lightsBad();
+    delay(100);
+    echoSensor();
+  }
+    brake();
+    delay(2000);
+      int i;
+      for( i = 0; i < calibrationTime; i++)
+      {
+        goForward();
+        qtr.calibrate();
+        delay(10);
+      }
+      brake();
+      closeGripper();
+      delay(400);
+      goLeft();
+      delay(950);
+      brake();
+      delay(50);
+      goForward();
+      delay(450);
+      counter1 = 0;
+      counter2 = 0;
 
 }
 
@@ -199,6 +250,23 @@ void lightsFront()
 //**********************//
 
 // movment methods //
+
+void goForward()
+{
+  analogWrite(motorA1, 0); //left backwards
+  analogWrite(motorA2, 215); //left forwards
+  analogWrite(motorB1, 0); //right backwards
+  analogWrite(motorB2, 225); //right forwards
+}
+
+
+void goLeft()
+{
+  analogWrite(motorA1, 0); //left backwards
+  analogWrite(motorA2, 0); //left forwards
+  analogWrite(motorB1, 0); //right backwards
+  analogWrite(motorB2, 225); //right forwards
+}
 
 void moveForward()
 {
@@ -373,3 +441,23 @@ void echoSensor () {
 }
 
 //****************//
+
+// Methods for gripper //
+
+void openGripper()
+{
+  digitalWrite(gripper, HIGH);
+  delayMicroseconds(gripperOpen);
+  digitalWrite(gripper, LOW);
+  delayMicroseconds(18550);
+}
+
+void closeGripper()
+{
+  digitalWrite(gripper, HIGH);
+  delayMicroseconds(gripperClose);
+  digitalWrite(gripper, LOW);
+  delayMicroseconds(18550);
+}
+
+//*****************//

@@ -4,17 +4,19 @@
 #include "Melodies.h"
 
 // Constants
+const int ROTATE_FORCE = 470;
+const int FORWARD_FORCE = 300;
 const int CALIBRATION_DRIVE_DISTANCE = 25;
-const int CALIBRATION_DRIVE_SPEED = 190;
+const int CALIBRATION_DRIVE_SPEED = 200;
 const int START_DRIVE_DISTANCE = 20; // Distance to travel to exit the start square
 const int KICK_DRIVE_SPEED = 0;
 const int KICK_DRIVE_DELAY = 0;
 const int INTERSECTION_CHECK_DRIVE_DISTANCE = 60;
-const int BASE_DRIVE_SPEED = 180;
-const int BASE_ROTATION_SPEED = 180; // Speed at which to rotate at default
+const int BASE_DRIVE_SPEED = 200;
+const int BASE_ROTATION_SPEED = 200; // Speed at which to rotate at default
 const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 1; // Multiplier to the right wheel since the left wheel is weaker
-const float WHEEL_ROTATION_TICK_DEGREES = 20; // Degrees the bot rotates per 'tick'
-const int CALIBRATION_CORRECTION_VALUE = 150; // An error factor that is added/removed for the white/black thresholds
+const float WHEEL_ROTATION_TICK_DEGREES = 16.5; // Degrees the bot rotates per 'tick'
+const int CALIBRATION_CORRECTION_VALUE = 100; // An error factor that is added/removed for the white/black thresholds
 const int ROTATION_CORRECTION_DRIVE_DISTANCE = 31; // Distance to drive forward in order to compensate for a 90 degree turn
 const int START_SIGNAL_DISTANCE = 30; // Distance it needs to see in order to start
 const int START_SIGNAL_WAIT = 2000; // Time to wait once it has received its start signal (in milliseconds)
@@ -266,12 +268,10 @@ void loop()
   {
     if (readBlackLine())
     {
-      resetWheelCounters();
-      while (wheelSensorCounter < INTERSECTION_CHECK_DRIVE_DISTANCE)
-      {
-        readLine();
-        readWheels();
-      }
+      breakWheels();
+      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      delay(FORWARD_FORCE);
       if (readBlackLine())
       {
         noTone(PIN_TONE);
@@ -288,27 +288,52 @@ void loop()
       }
       else
       {
-        driveBackward(BASE_DRIVE_SPEED);
-        resetWheelCounters();
-        while (wheelSensorCounter < INTERSECTION_CHECK_DRIVE_DISTANCE)
-        {
-          readLine();
-          readWheels();
-        }
-        rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+        breakWheels();
+        analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+        analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+        delay(FORWARD_FORCE);
+        breakWheels();
+        analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
+        analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
+        delay(ROTATE_FORCE);
+        breakWheels();
       }
     }
     else if (readRightLine())
     {
-      rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+      breakWheels();
+      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      delay(FORWARD_FORCE);
+      breakWheels();
+      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
+      analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
+      delay(ROTATE_FORCE);
+      breakWheels();
     }
     else if (readLeftLine())
     {
-      rotateWheels(-90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+      breakWheels();
+      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      delay(FORWARD_FORCE);
+      breakWheels();
+      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
+      analogWrite(PIN_LEFT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
+      delay(ROTATE_FORCE);
+      breakWheels();
     }
     else if (readWhiteLine())
     {
-      rotateWheels(180, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
+      breakWheels();
+      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+      delay(FORWARD_FORCE);
+      breakWheels();
+      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
+      analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
+      delay(ROTATE_FORCE);
+      breakWheels();
     }
     else
     {

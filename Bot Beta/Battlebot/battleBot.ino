@@ -22,7 +22,7 @@ const int echoPin = 8; // the pin that is connected to the echo of the ultra son
 long duration; // the time it takes for the echo to be detected
 int distance; // the distance between the echoSensor and an object
 const int minSafeDistance = 25; // the minimum safe distance for the battle bot to be from a wall
-const int startDistance = 30;
+const int startDistance = 30; // the minimum distance for when the pawn/other robot has been seen
 
 //***************************//
 
@@ -90,6 +90,8 @@ void setup() {
   delay(500);
   echoSensor();
   startMusic();
+  openGripper();
+  delay(200);
   while (distance > startDistance)
   {
     lightsGood();
@@ -109,7 +111,7 @@ void setup() {
       }
       brake();
       closeGripper();
-      delay(400);
+      delay(200);
       goLeft();
       delay(950);
       brake();
@@ -118,12 +120,21 @@ void setup() {
       delay(450);
       counter1 = 0;
       counter2 = 0;
-
+      
 }
 
 void loop() 
-{
+{  
   solveMaze();
+}
+
+void goToFinnish()
+{
+  counter1 = 0;
+  counter2 = 0;
+  brake();
+  movementValue = 10;
+  moveForward();
 }
 
 void solveMaze()
@@ -135,7 +146,33 @@ void solveMaze()
   rightScan();
   delay(500);
   echoSensor();
-  if (distance < minSafeDistance)
+  if (distance >= 50)
+  {
+    frontScan();
+    delay(500);
+    echoSensor();
+    if (distance >= 50);
+    {
+      leftScan();
+      delay(500);
+      echoSensor();
+      if (distance >= 50);
+      {
+        goToFinnish();
+        uint16_t position = qtr.readLineBlack(sensorValues);   
+        //stop when all sensors detect black    
+        if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
+        {     
+          brake();    
+          delay(50);     
+          openGripper();  
+          brake();
+          delay(5000); 
+        }
+      }
+    }
+  }
+  else if (distance < minSafeDistance)
   {
     lightsBad();
     delay(200);

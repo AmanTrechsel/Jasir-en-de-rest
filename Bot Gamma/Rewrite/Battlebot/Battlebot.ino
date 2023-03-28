@@ -5,16 +5,16 @@
 
 // Constants
 const int CALIBRATION_DRIVE_DISTANCE = 25;
-const int CALIBRATION_DRIVE_SPEED = 150;
+const int CALIBRATION_DRIVE_SPEED = 190;
 const int START_DRIVE_DISTANCE = 20; // Distance to travel to exit the start square
-const int KICK_DRIVE_SPEED = 255;
-const int KICK_DRIVE_DELAY = 100;
+const int KICK_DRIVE_SPEED = 0;
+const int KICK_DRIVE_DELAY = 0;
 const int INTERSECTION_CHECK_DRIVE_DISTANCE = 60;
-const int BASE_DRIVE_SPEED = 170;
-const int BASE_ROTATION_SPEED = 150; // Speed at which to rotate at default
+const int BASE_DRIVE_SPEED = 180;
+const int BASE_ROTATION_SPEED = 180; // Speed at which to rotate at default
 const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 1; // Multiplier to the right wheel since the left wheel is weaker
 const float WHEEL_ROTATION_TICK_DEGREES = 20; // Degrees the bot rotates per 'tick'
-const int CALIBRATION_CORRECTION_VALUE = 50; // An error factor that is added/removed for the white/black thresholds
+const int CALIBRATION_CORRECTION_VALUE = 150; // An error factor that is added/removed for the white/black thresholds
 const int ROTATION_CORRECTION_DRIVE_DISTANCE = 31; // Distance to drive forward in order to compensate for a 90 degree turn
 const int START_SIGNAL_DISTANCE = 30; // Distance it needs to see in order to start
 const int START_SIGNAL_WAIT = 2000; // Time to wait once it has received its start signal (in milliseconds)
@@ -322,7 +322,7 @@ bool readBlackLine()
 {
   for (int i = 0; i < 8; i++)
   {
-    if (sensors[i] < blackThreshold)
+    if (sensors[i] <  qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
     {
       return false;
     }
@@ -332,10 +332,9 @@ bool readBlackLine()
 
 bool readWhiteLine()
 {
-  return lineReadData==0;
   for (int i = 0; i < 8; i++)
   {
-    if (sensors[i] > whiteThreshold)
+    if (sensors[i] > qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
     {
       return false;
     }
@@ -345,10 +344,9 @@ bool readWhiteLine()
 
 bool readLeftLine()
 {
-   return lineReadData <= 1500;
   for (int i = LEFT_RANGE_MIN; i < LEFT_RANGE_MAX; i++)
   {
-    if (sensors[i] >= blackThreshold)
+    if (sensors[i] >= qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
     {
       return true;
     }
@@ -358,10 +356,9 @@ bool readLeftLine()
 
 bool readRightLine()
 {
-   return lineReadData >= 5500;
   for (int i = RIGHT_RANGE_MIN; i < RIGHT_RANGE_MAX; i++)
   {
-    if (sensors[i] >= blackThreshold)
+    if (sensors[i] >= qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
     {
       return true;
     }

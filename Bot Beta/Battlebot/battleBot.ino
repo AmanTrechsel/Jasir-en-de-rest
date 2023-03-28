@@ -1,7 +1,14 @@
-#include <FastLED.h>
-#include <QTRSensors.h>
+/************************************
+ *         BATTLE BOT BETA          *
+ ************************************/
+
+// include documents //
+#include <FastLED.h> //Library for the led lights
+#include <QTRSensors.h> //Library for the line sensor
 #include "music2.h" // finish song
 #include "music1.h" //start song
+
+//******************************//
 
 // variables for the wheels //
 
@@ -22,15 +29,15 @@ const int echoPin = 8; // the pin that is connected to the echo of the ultra son
 long duration; // the time it takes for the echo to be detected
 int distance; // the distance between the echoSensor and an object
 const int minSafeDistance = 25; // the minimum safe distance for the battle bot to be from a wall
-const int startDistance = 30; // the minimum distance for when the pawn/other robot has been seen
+const int startDistance = 30; // The minimun distance to start the race
 
 //***************************//
 
 // variables for the gripper //
 
 const int gripper = 4; // the pin that is connected to the servo of the gripper
-const int gripperOpen = 1650;
-const int gripperClose = 1250;
+const int gripperOpen = 1650; //how far the gripper can open
+const int gripperClose = 1250; // how small the gripper can close
 
 //**************************//
 
@@ -51,20 +58,23 @@ int movementValue; // the variable for the movement amount
 // variables for line sensor //
 
 bool calibrationComplete = false; // Check if calibration succeeded
-const int calibrationTime = 26;
-const bool shouldCalibrate = true;
-QTRSensors qtr;
-const uint8_t SensorCount = 8;
-uint16_t sensorValues[SensorCount];
+const int calibrationTime = 26; //Time for calibration
+const bool shouldCalibrate = true; //Just an extra check if it should calibrate
+QTRSensors qtr; // Specify the qtr sensor library
+const uint8_t SensorCount = 8; //How much sensors there are
+uint16_t sensorValues[SensorCount]; //specify the variable for the sensorvalues
 
 //********************//
 
+// define pins //
+#define LED_PIN 11 //our led pin is on pin 11
+#define NUM_LEDS 4 // we have 4 neonpixels
+CRGB leds[NUM_LEDS]; // specify how many leds there are
 
-#define LED_PIN 11
-#define NUM_LEDS 4
-CRGB leds[NUM_LEDS];
+//*********************//
 
 void setup() {
+  // Define the input/output list //
   pinMode(motorA1, OUTPUT);
   pinMode(motorA2, OUTPUT);
   pinMode(motorB1, OUTPUT);
@@ -75,24 +85,24 @@ void setup() {
   pinMode(echoPin, INPUT); // sets the echo pin as an input
   pinMode(scanner, OUTPUT);
   pinMode(gripper, OUTPUT);
+
+  //*************************//
   Serial.begin(9600);
-  attachInterrupt(digitalPinToInterrupt(sensorMotor1), count1, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(sensorMotor1), count1, CHANGE);// Every time the sensor value is changed than the code will execute
   attachInterrupt(digitalPinToInterrupt(sensorMotor2), count2, CHANGE);
   
   qtr.setTypeAnalog();
-  qtr.setSensorPins((const uint8_t[]){A6,A0,A1,A2,A3,A4,A5,A7}, SensorCount);
+  qtr.setSensorPins((const uint8_t[]){A6,A0,A1,A2,A3,A4,A5,A7}, SensorCount); // specify every pin for the line sensor
 
-  FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS);
-  FastLED.setMaxPowerInVoltsAndMilliamps(5, 500);
+  FastLED.addLeds<WS2812B, LED_PIN, RGB>(leds, NUM_LEDS); // Add the lights
+  FastLED.setMaxPowerInVoltsAndMilliamps(5, 500); //Define the lights in volt and milliamps
   FastLED.clear();
-  FastLED.show();
-  frontScan();
-  delay(500);
-  echoSensor();
-  startMusic();
-  openGripper();
-  delay(200);
-  while (distance > startDistance)
+  FastLED.show(); // turn on the lights when the code for the lights execute
+  frontScan(); // Scan the front
+  delay(500); // Wait for o.5 seconds
+  echoSensor(); // read the sensor out
+  startMusic(); // Start the begin music
+  while (distance > startDistance) // check if the distance is bigger than the startdistance // if that's true execute the code
   {
     lightsGood();
     delay(100);
@@ -101,43 +111,42 @@ void setup() {
     echoSensor();
   }
     brake();
-    delay(2000);
+    delay(2000); // wait for 2 seconds so the other bot can go away
       int i;
-      for( i = 0; i < calibrationTime; i++)
+      for( i = 0; i < calibrationTime; i++) // execute the code till the calibration time is over, he is executing the code inside the brackets 26 times
       {
         goForward();
         qtr.calibrate();
         delay(10);
       }
       brake();
-      closeGripper();
-      delay(200);
-      goLeft();
-      delay(950);
-      brake();
+      closeGripper(); // close the gripper
+      delay(400);
+      goLeft(); //after 0.4 seconds go left
+      delay(950); // turn left for 0.95 seconden
+      brake(); // stop
       delay(50);
-      goForward();
+      goForward(); // go forward in to the maze
       delay(450);
       counter1 = 0;
       counter2 = 0;
-      
+      // put the counters back to zero for the next funtions
+
 }
 
 void loop() 
-{  
-  solveMaze();
-}
-
-void goToFinnish()
 {
-  counter1 = 0;
-  counter2 = 0;
-  brake();
-  movementValue = 10;
-  moveForward();
+  solveMaze(); // call the method to solve the maze
 }
 
 void solveMaze()
+/********************************************************************************************************************************************************************************************** 
+ * First the 2 counters is set to zero, after that the bot brakes and put the right lights on to show that he is going to do a right scan. After 0.5 seconds he is reading the sensor out.    *
+ * Than an if statement to check if the distance is smaller than the minimun safe distance, if so the lights are set to bad, than he does a front scan.                                       *
+ * If not the lights are set to good and he goes to the right to check if there is a free way to go. Than he goes to the second if the distance is smaller than the minimum the lights go     *
+ * bad again en he is going to do a left scan and then the same as the right. The last if checks if the distance is greater than the minimum distance, turn the lights on good and go forward *
+ * if not the lights go bad again and he is turning around to look for another way to solve the maze.                                                                                         *
+ *********************************************************************************************************************************************************************************************/
 {
   counter2 = 0;
   counter1 = 0;
@@ -146,33 +155,7 @@ void solveMaze()
   rightScan();
   delay(500);
   echoSensor();
-  if (distance >= 50)
-  {
-    frontScan();
-    delay(500);
-    echoSensor();
-    if (distance >= 50);
-    {
-      leftScan();
-      delay(500);
-      echoSensor();
-      if (distance >= 50);
-      {
-        goToFinnish();
-        uint16_t position = qtr.readLineBlack(sensorValues);   
-        //stop when all sensors detect black    
-        if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
-        {     
-          brake();    
-          delay(50);     
-          openGripper();  
-          brake();
-          delay(5000); 
-        }
-      }
-    }
-  }
-  else if (distance < minSafeDistance)
+  if (distance < minSafeDistance)
   {
     lightsBad();
     delay(200);
@@ -236,7 +219,7 @@ void solveMaze()
 
 // neo pixel methods //
 
-void lightsGood()
+void lightsGood() // turn the lights to full to green
 {
     FastLED.setBrightness(255);
     leds[0] = CRGB(0, 255, 0);
@@ -246,7 +229,7 @@ void lightsGood()
     FastLED.show();
 }
 
-void lightsRight() 
+void lightsRight() // turn the right lights on
 {
   FastLED.setBrightness(255);
   leds[2] = CRGB(255, 165, 0);
@@ -256,7 +239,7 @@ void lightsRight()
   FastLED.show();
 }
 
-void lightsBad()
+void lightsBad() // turn all lights to red
 {
   FastLED.setBrightness(255);
   leds[0] = CRGB(255, 0, 0);
@@ -266,7 +249,7 @@ void lightsBad()
   FastLED.show();
 }
 
-void lightsLeft()
+void lightsLeft() //turn the left lights on
 {
   FastLED.setBrightness(255);
   leds[0] = CRGB(255, 165, 0);
@@ -276,7 +259,7 @@ void lightsLeft()
   FastLED.show();
 }
 
-void lightsFront()
+void lightsFront() //turn the front lights on
 {
   FastLED.setBrightness(255);
   leds[2] = CRGB(255, 165, 0);
@@ -290,7 +273,7 @@ void lightsFront()
 
 // movment methods //
 
-void goForward()
+void goForward()  // move forward
 {
   analogWrite(motorA1, 0); //left backwards
   analogWrite(motorA2, 215); //left forwards
@@ -299,7 +282,7 @@ void goForward()
 }
 
 
-void goLeft()
+void goLeft() // move to the left
 {
   analogWrite(motorA1, 0); //left backwards
   analogWrite(motorA2, 0); //left forwards
@@ -307,7 +290,7 @@ void goLeft()
   analogWrite(motorB2, 225); //right forwards
 }
 
-void moveForward()
+void moveForward() // move forward with pulses
 {
   while (counter2 < movementValue)
   {
@@ -317,7 +300,7 @@ void moveForward()
   } 
 }
 
-void turnAround()
+void turnAround() // turn the bot first to the left and after that go to the right, an full 180 degrees turn
 {
   leftTurn();
   brake();
@@ -325,7 +308,7 @@ void turnAround()
   rightTurn();
 }
 
-void turnLeft()
+void turnLeft() // go left with pulses
 {
   movementValue = 37;
   while (counter2 < movementValue)
@@ -335,7 +318,7 @@ void turnLeft()
    }
 }
 
-void turnRight()
+void turnRight() // go right with pulses and go forward left
 {
   movementValue = 37;
   while (counter1 < movementValue)
@@ -345,7 +328,7 @@ void turnRight()
   }
 }
 
-void rightTurn()
+void rightTurn() // go right with pulses and go forward right
 {
   movementValue = 35;
   while (counter2 < movementValue)
@@ -355,7 +338,7 @@ void rightTurn()
   }
 }
 
-void leftTurn()
+void leftTurn() // go left with pulses and go left backwards
 {
   movementValue = 40;
   while (counter1 < movementValue)
@@ -365,7 +348,7 @@ void leftTurn()
   }
 }
 
-void startUp()
+void startUp() // turn the rightforward and the leftforward together on
 {
   movementValue = 1;
   while (counter2 < movementValue)
@@ -376,24 +359,24 @@ void startUp()
   }
 }
 
-void rightBrake () {
+void rightBrake () { // brake the right wheel
   digitalWrite(motorB1, HIGH);
   digitalWrite(motorB2, HIGH);
 }
 
-void leftBrake () {
+void leftBrake () { // brake the left wheel
   digitalWrite(motorA1, HIGH);
   digitalWrite(motorA2, HIGH);
 }
 
-void brake() {
+void brake() { // turn of the wheels
   digitalWrite(motorA1, HIGH);
   digitalWrite(motorA2, HIGH);
   digitalWrite(motorB1, HIGH);
   digitalWrite(motorB2, HIGH);
 }
 
-void leftForward()
+void leftForward() 
 {
   analogWrite(motorA1, 0);
   analogWrite(motorA2, speed - 3);

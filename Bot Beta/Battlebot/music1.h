@@ -219,7 +219,11 @@ void startMusic() {
     delay(noteDuration);
     
     // stop the waveform generation before the next note.
-    noTone(buzzer);
+    noTone(musicBuzzer);
   }
 }
+
+  void stopMusic(){
+    noTone(musicBuzzer);
+  }
 #endif

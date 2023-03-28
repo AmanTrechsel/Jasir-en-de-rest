@@ -89,6 +89,7 @@ void setup() {
   frontScan();
   delay(500);
   echoSensor();
+  startMusic();
   while (distance > startDistance)
   {
     lightsGood();
@@ -96,8 +97,6 @@ void setup() {
     lightsBad();
     delay(100);
     echoSensor();
-    startMusic();
-    delay(10000);
   }
     brake();
     delay(2000);

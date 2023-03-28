@@ -1,5 +1,6 @@
 /************************************
- *         BATTLE BOT BETA          *
+ *         BATTLE BOT BETA          *    
+ *         Jesper en Kimmy          *
  ************************************/
 
 // include documents //
@@ -376,25 +377,25 @@ void brake() { // turn of the wheels
   digitalWrite(motorB2, HIGH);
 }
 
-void leftForward() 
+void leftForward() // left wheel go forward
 {
   analogWrite(motorA1, 0);
   analogWrite(motorA2, speed - 3);
 }
 
-void rightForward()
+void rightForward() // right wheel go forward
 {
   analogWrite(motorB1, 0);
   analogWrite(motorB2, speed);
 }
 
-void leftBackward()
+void leftBackward() // left wheel go backwards
 {
   analogWrite(motorA1, speed);
   analogWrite(motorA2, 0);
 }
 
-void rightBackward()
+void rightBackward() // right wheel go backwards
 {
   analogWrite(motorB1, speed);
   analogWrite(motorB2, 0);

@@ -4,18 +4,18 @@
 #include "Melodies.h"
 
 // Constants
-const int ROTATE_FORCE = 470;
-const int FORWARD_FORCE = 300;
+const int ROTATE_FORCE = 545;
+const int FORWARD_FORCE = 350;
 const int CALIBRATION_DRIVE_DISTANCE = 25;
-const int CALIBRATION_DRIVE_SPEED = 200;
-const int START_DRIVE_DISTANCE = 20; // Distance to travel to exit the start square
+const int CALIBRATION_DRIVE_SPEED = 180;
+const int START_DRIVE_DISTANCE = 30; // Distance to travel to exit the start square
 const int KICK_DRIVE_SPEED = 0;
 const int KICK_DRIVE_DELAY = 0;
 const int INTERSECTION_CHECK_DRIVE_DISTANCE = 60;
-const int BASE_DRIVE_SPEED = 200;
-const int BASE_ROTATION_SPEED = 200; // Speed at which to rotate at default
-const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 1; // Multiplier to the right wheel since the left wheel is weaker
-const float WHEEL_ROTATION_TICK_DEGREES = 16.5; // Degrees the bot rotates per 'tick'
+const int BASE_DRIVE_SPEED = 180;
+const int BASE_ROTATION_SPEED = 180; // Speed at which to rotate at default
+const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 0.9; // Multiplier to the right wheel since the left wheel is weaker
+const float WHEEL_ROTATION_TICK_DEGREES = 12; // Degrees the bot rotates per 'tick'
 const int CALIBRATION_CORRECTION_VALUE = 100; // An error factor that is added/removed for the white/black thresholds
 const int ROTATION_CORRECTION_DRIVE_DISTANCE = 31; // Distance to drive forward in order to compensate for a 90 degree turn
 const int START_SIGNAL_DISTANCE = 30; // Distance it needs to see in order to start
@@ -32,7 +32,7 @@ const int RIGHT_RANGE_MAX = 7;
 const float PROPORTIONAL_GAIN = 0.225;
 const float DERIVATIVE_GAIN = 2.25;
 // Gripper
-const int GRIPPER_CLOSED_ANGLE = 130;
+const int GRIPPER_CLOSED_ANGLE = 120;
 const int GRIPPER_OPENED_ANGLE = 180;
 
 // Pins
@@ -212,7 +212,11 @@ void setup()
     }
   }
   closeGripper();
-  rotateWheels(-90, CALIBRATION_DRIVE_SPEED, 0);
+  breakWheels();
+  analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
+  analogWrite(PIN_LEFT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
+  delay(ROTATE_FORCE);
+  breakWheels();
   driveForward(CALIBRATION_DRIVE_SPEED);
   resetWheelCounters();
   while (wheelSensorCounter < START_DRIVE_DISTANCE)
@@ -271,7 +275,7 @@ void loop()
       breakWheels();
       analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
       analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      delay(FORWARD_FORCE);
+      delay(FORWARD_FORCE * 2);
       if (readBlackLine())
       {
         noTone(PIN_TONE);
@@ -289,8 +293,8 @@ void loop()
       else
       {
         breakWheels();
-        analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-        analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
+        analogWrite(PIN_LEFT_WHEEL_BACKWARD, BASE_DRIVE_SPEED);
+        analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_DRIVE_SPEED);
         delay(FORWARD_FORCE);
         breakWheels();
         analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
@@ -359,7 +363,7 @@ bool readWhiteLine()
 {
   for (int i = 0; i < 8; i++)
   {
-    if (sensors[i] > qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
+    if (sensors[i] > qtr.calibrationOn.minimum[i] + CALIBRATION_CORRECTION_VALUE)
     {
       return false;
     }

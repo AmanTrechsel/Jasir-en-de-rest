@@ -489,18 +489,24 @@ void echoSensor () {
 
 void openGripper()
 {
+  for (int i=0; i<10; i++)
+  {
   digitalWrite(gripper, HIGH);
   delayMicroseconds(gripperOpen);
   digitalWrite(gripper, LOW);
   delayMicroseconds(18550);
+  }
 }
 
 void closeGripper()
 {
+  for (int i=0; i<10; i++)
+  {
   digitalWrite(gripper, HIGH);
   delayMicroseconds(gripperClose);
   digitalWrite(gripper, LOW);
   delayMicroseconds(18550);
+  }
 }
 
 //*****************//

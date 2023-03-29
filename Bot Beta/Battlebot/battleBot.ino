@@ -100,9 +100,11 @@ void setup() {
   FastLED.clear();
   FastLED.show(); // turn on the lights when the code for the lights execute
   frontScan(); // Scan the front
-  delay(500); // Wait for o.5 seconds
+  delay(500); // Wait for 0.5 seconds
+  openGripper(); // opens the gripper
+  delay(400);
   echoSensor(); // read the sensor out
-  startMusic(); // Start the begin music
+  //startMusic(); // Start the begin music
   while (distance > startDistance) // check if the distance is bigger than the startdistance // if that's true execute the code
   {
     lightsGood();
@@ -124,16 +126,11 @@ void setup() {
       closeGripper(); // close the gripper
       delay(400);
       goLeft(); //after 0.4 seconds go left
-      delay(950); // turn left for 0.95 seconden
+      delay(900); // turn left for 0.95 seconden
       brake(); // stop
-      closeGripper();
-      delay(200);
-      goLeft();
-      delay(900);
-      brake();
       delay(50);
       goForward(); // go forward in to the maze
-      delay(450);
+      delay(950);
       counter1 = 0;
       counter2 = 0;
       // put the counters back to zero for the next funtions
@@ -162,36 +159,6 @@ void solveMaze()
   delay(500);
   echoSensor();
   if (distance < minSafeDistance)
-  if (distance >= 50)
-  {
-    frontScan();
-    delay(500);
-    echoSensor();
-    if (distance >= 50);
-    {
-      leftScan();
-      delay(500);
-      echoSensor();
-      if (distance >= 50);
-      {
-        goToFinnish();
-        uint16_t position = qtr.readLineBlack(sensorValues);   
-        //stop when all sensors detect black    
-        if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
-        {     
-          brake();    
-          delay(50);     
-          openGripper();  
-          brake();
-          backUp();
-          delay(500);
-          brake();
-          finishMusic();
-        }
-      }
-    }
-  }
-  else if (distance < minSafeDistance)
   {
     lightsBad();
     delay(200);
@@ -250,17 +217,20 @@ void solveMaze()
     movementValue = 30;
     moveForward();
   }
+  uint16_t position = qtr.readLineBlack(sensorValues);   
+  //stop when all sensors detect black    
+  if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
+  {     
+     brake();    
+     delay(50);     
+     openGripper();  
+     brake();
+     backUp();
+     delay(500);
+     brake();
+     finishMusic();
+    }
 }
-
-void goToFinnish()
-{
-  counter1 = 0;
-  counter2 = 0;
-  brake();
-  movementValue = 10;
-  moveForward();
-}
-
 
 // neo pixel methods //
 

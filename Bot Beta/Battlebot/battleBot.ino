@@ -56,6 +56,12 @@ int movementValue; // the variable for the movement amount
 
 //*********************//
 
+// finish variable //
+
+boolean notFinished = true;
+
+//*****************//
+
 // variables for line sensor //
 
 bool calibrationComplete = false; // Check if calibration succeeded
@@ -104,7 +110,6 @@ void setup() {
   openGripper(); // opens the gripper
   delay(400);
   echoSensor(); // read the sensor out
-  //startMusic(); // Start the begin music
   while (distance > startDistance) // check if the distance is bigger than the startdistance // if that's true execute the code
   {
     lightsGood();
@@ -126,11 +131,11 @@ void setup() {
       closeGripper(); // close the gripper
       delay(400);
       goLeft(); //after 0.4 seconds go left
-      delay(900); // turn left for 0.95 seconden
+      delay(850); // turn left for 0.95 seconden
       brake(); // stop
       delay(50);
       goForward(); // go forward in to the maze
-      delay(950);
+      delay(1050);
       counter1 = 0;
       counter2 = 0;
       // put the counters back to zero for the next funtions
@@ -151,85 +156,94 @@ void solveMaze()
  * if not the lights go bad again and he is turning around to look for another way to solve the maze.                                                                                         *
  *********************************************************************************************************************************************************************************************/
 {
-  counter2 = 0;
-  counter1 = 0;
-  brake();
-  lightsRight();
-  rightScan();
-  delay(500);
-  echoSensor();
-  if (distance < minSafeDistance)
+  if (notFinished == false)
   {
-    lightsBad();
-    delay(200);
-    lightsFront();
-    frontScan();
+    brake();
+    finishMusic();
+  }
+  else
+  {
+    notFinished == true;
+    counter2 = 0;
+    counter1 = 0;
+    brake();
+    lightsRight();
+    rightScan();
     delay(500);
     echoSensor();
     if (distance < minSafeDistance)
     {
       lightsBad();
       delay(200);
-      lightsLeft();
-      leftScan();
+      lightsFront();
+      frontScan();
       delay(500);
       echoSensor();
-      if (distance > minSafeDistance)
+      if (distance < minSafeDistance)
       {
-        lightsGood();
-        brake();
-        startUp();
-        counter1 = 0;
-        turnLeft();
-        counter2 = 0;
-        movementValue = 30;
-        moveForward();    
+        lightsBad();
+        delay(200);
+        lightsLeft();
+        leftScan();
+        delay(500);
+        echoSensor();
+        if (distance > minSafeDistance)
+        {
+          lightsGood();
+          brake();
+          startUp();
+          counter1 = 0;
+          turnLeft();
+          counter2 = 0;
+          movementValue = 29;
+          moveForward();    
+        }
+        else
+        {
+          lightsBad();
+          brake();
+          turnAround();
+          counter2 = 0;
+          movementValue = 12;
+          moveForward();
+        }
       }
       else
       {
-        lightsBad();
-        brake();
-        turnAround();
+        lightsGood();
         counter2 = 0;
-        movementValue = 12;
+        brake();
+        startUp();
+        counter2 = 0;
+        movementValue = 52;
         moveForward();
       }
     }
     else
     {
       lightsGood();
-      counter2 = 0;
       brake();
       startUp();
       counter2 = 0;
-      movementValue = 52;
+      turnRight();
+      counter2 = 0;
+      movementValue = 29;
       moveForward();
     }
+    uint16_t position = qtr.readLineBlack(sensorValues);   
+    //stop when all sensors detect black    
+    if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
+    {     
+       brake();    
+       delay(50);     
+       openGripper();  
+       brake();
+       backUp();
+       delay(500);
+       brake();
+       notFinished == false;
+      }
   }
-  else
-  {
-    lightsGood();
-    brake();
-    startUp();
-    counter2 = 0;
-    turnRight();
-    counter2 = 0;
-    movementValue = 30;
-    moveForward();
-  }
-  uint16_t position = qtr.readLineBlack(sensorValues);   
-  //stop when all sensors detect black    
-  if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
-  {     
-     brake();    
-     delay(50);     
-     openGripper();  
-     brake();
-     backUp();
-     delay(500);
-     brake();
-     finishMusic();
-    }
 }
 
 // neo pixel methods //
@@ -291,7 +305,7 @@ void lightsFront() //turn the front lights on
 void goForward()  // move forward
 {
   analogWrite(motorA1, 0); //left backwards
-  analogWrite(motorA2, 215); //left forwards
+  analogWrite(motorA2, 220); //left forwards
   analogWrite(motorB1, 0); //right backwards
   analogWrite(motorB2, 225); //right forwards
 }
@@ -331,7 +345,7 @@ void turnAround() // turn the bot first to the left and after that go to the rig
 
 void turnLeft() // go left with pulses
 {
-  movementValue = 37;
+  movementValue = 38;
   while (counter2 < movementValue)
   {
     speed = 200;
@@ -361,7 +375,7 @@ void rightTurn() // go right with pulses and go forward right
 
 void leftTurn() // go left with pulses and go left backwards
 {
-  movementValue = 40;
+  movementValue = 41;
   while (counter1 < movementValue)
   {
     speed = 200;
@@ -400,13 +414,13 @@ void brake() { // turn of the wheels
 void leftForward() // left wheel go forward
 {
   analogWrite(motorA1, 0);
-  analogWrite(motorA2, speed - 3);
+  analogWrite(motorA2, speed);
 }
 
 void rightForward() // right wheel go forward
 {
   analogWrite(motorB1, 0);
-  analogWrite(motorB2, speed);
+  analogWrite(motorB2, speed - 3);
 }
 
 void leftBackward() // left wheel go backwards

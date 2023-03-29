@@ -1,6 +1,6 @@
 #include "Notes.h"
 
-const int PIN_TONE = 0;
+const int PIN_TONE = 8;
 const int PACMAN_NOTES = 32;
 const int PACMAN_SECOND_HALF_START = 22;
 

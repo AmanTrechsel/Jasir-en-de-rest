@@ -11,13 +11,14 @@ const int CALIBRATION_DRIVE_SPEED = 180;
 const int START_DRIVE_DISTANCE = 30; // Distance to travel to exit the start square
 const int KICK_DRIVE_SPEED = 0;
 const int KICK_DRIVE_DELAY = 0;
-const int INTERSECTION_CHECK_DRIVE_DISTANCE = 60;
+const int INTERSECTION_CHECK_DRIVE_DISTANCE = 18;
+const int MAX_STRAIGHT_DIFFERENCE = 180;
 const int BASE_DRIVE_SPEED = 180;
-const int BASE_ROTATION_SPEED = 180; // Speed at which to rotate at default
+const int BASE_ROTATION_SPEED = 200; // Speed at which to rotate at default
 const float RIGHT_WHEEL_CORRECTION_MULTIPLIER = 0.9; // Multiplier to the right wheel since the left wheel is weaker
-const float WHEEL_ROTATION_TICK_DEGREES = 12; // Degrees the bot rotates per 'tick'
+const float WHEEL_ROTATION_TICK_DEGREES = 22.5; // Degrees the bot rotates per 'tick'
 const int CALIBRATION_CORRECTION_VALUE = 100; // An error factor that is added/removed for the white/black thresholds
-const int ROTATION_CORRECTION_DRIVE_DISTANCE = 31; // Distance to drive forward in order to compensate for a 90 degree turn
+const int ROTATION_CORRECTION_DRIVE_DISTANCE = 1300; // Distance to drive forward in order to compensate for a 90 degree turn
 const int START_SIGNAL_DISTANCE = 30; // Distance it needs to see in order to start
 const int START_SIGNAL_WAIT = 2000; // Time to wait once it has received its start signal (in milliseconds)
 const int DRIVING_LIGHTS_TIME = 100; // Time in milliseconds between switching the lights while driving normally
@@ -96,7 +97,7 @@ void setup()
   // Line Sensor
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]) {A6,A0,A7,A1,A2,A3,A4,A5},8);
-
+  
   // Await start
   delay(1000);
   unsigned int waitCounter = 0;
@@ -212,11 +213,7 @@ void setup()
     }
   }
   closeGripper();
-  breakWheels();
-  analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
-  analogWrite(PIN_LEFT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
-  delay(ROTATE_FORCE);
-  breakWheels();
+  rotateWheels(-90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
   driveForward(CALIBRATION_DRIVE_SPEED);
   resetWheelCounters();
   while (wheelSensorCounter < START_DRIVE_DISTANCE)
@@ -275,7 +272,12 @@ void loop()
       breakWheels();
       analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
       analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      delay(FORWARD_FORCE * 2);
+      resetWheelCounters();
+      while (wheelSensorCounter < INTERSECTION_CHECK_DRIVE_DISTANCE)
+      {
+        readLine();
+        readWheels();
+      }
       if (readBlackLine())
       {
         noTone(PIN_TONE);
@@ -292,52 +294,20 @@ void loop()
       }
       else
       {
-        breakWheels();
-        analogWrite(PIN_LEFT_WHEEL_BACKWARD, BASE_DRIVE_SPEED);
-        analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_DRIVE_SPEED);
-        delay(FORWARD_FORCE);
-        breakWheels();
-        analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
-        analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
-        delay(ROTATE_FORCE);
-        breakWheels();
+        rotateWheels(90, BASE_ROTATION_SPEED, 0);
       }
     }
     else if (readRightLine())
     {
-      breakWheels();
-      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      delay(FORWARD_FORCE);
-      breakWheels();
-      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
-      analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
-      delay(ROTATE_FORCE);
-      breakWheels();
+      rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
     }
-    else if (readLeftLine())
+    else if (readLeftLine() && !readStraightLine())
     {
-      breakWheels();
-      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      delay(FORWARD_FORCE);
-      breakWheels();
-      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
-      analogWrite(PIN_LEFT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
-      delay(ROTATE_FORCE);
-      breakWheels();
+      rotateWheels(-90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
     }
     else if (readWhiteLine())
     {
-      breakWheels();
-      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      analogWrite(PIN_RIGHT_WHEEL_FORWARD, BASE_DRIVE_SPEED);
-      delay(FORWARD_FORCE);
-      breakWheels();
-      analogWrite(PIN_LEFT_WHEEL_FORWARD, BASE_ROTATION_SPEED);
-      analogWrite(PIN_RIGHT_WHEEL_BACKWARD, BASE_ROTATION_SPEED);
-      delay(ROTATE_FORCE);
-      breakWheels();
+      rotateWheels(90, BASE_ROTATION_SPEED, ROTATION_CORRECTION_DRIVE_DISTANCE);
     }
     else
     {
@@ -374,6 +344,18 @@ bool readWhiteLine()
 bool readLeftLine()
 {
   for (int i = LEFT_RANGE_MIN; i < LEFT_RANGE_MAX; i++)
+  {
+    if (sensors[i] >= qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool readStraightLine()
+{
+  for (int i = LEFT_RANGE_MAX; i < RIGHT_RANGE_MIN; i++)
   {
     if (sensors[i] >= qtr.calibrationOn.maximum[i] - CALIBRATION_CORRECTION_VALUE)
     {
@@ -447,6 +429,7 @@ void driveBackward(unsigned short int speed)
 
 void rotateWheels(int degrees, int speed, int compensation_distance)
 {
+  degrees = degrees / 2;
   float degreesLeft = WHEEL_ROTATION_TICK_DEGREES * abs(degrees);
   resetWheelCounters();
   breakWheels();
@@ -473,6 +456,11 @@ void rotateWheels(int degrees, int speed, int compensation_distance)
     {
       readWheels();
     }
+    readLine();
+    while (!readStraightLine())
+    {
+      readLine();
+    }
   }
   else
   {
@@ -489,8 +477,18 @@ void rotateWheels(int degrees, int speed, int compensation_distance)
     {
       readWheels();
     }
+    readLine();
+    while (!readStraightLine())
+    {
+      readLine();
+    }
   }
   breakWheels();
+  for (int i = 0; i < 10; i++)
+  {
+    readLine();
+    delay(10);    
+  }
 }
 
 void drivePID(int speed)
@@ -507,6 +505,8 @@ void drivePID(int speed)
   // Min and max speeds 
   m1Speed = min(max(m1Speed, 0), speed);
   m2Speed = min(max(m2Speed, 0), speed);
+
+  if (abs(m1Speed - m2Speed) > MAX_STRAIGHT_DIFFERENCE) { return; }
 
   // Actually drive
   analogWrite(PIN_LEFT_WHEEL_BACKWARD, 0);

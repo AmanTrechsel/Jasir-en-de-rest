@@ -7,7 +7,6 @@
 #include <FastLED.h> //Library for the led lights
 #include <QTRSensors.h> //Library for the line sensor
 #include "music2.h" // finish song
-#include "music1.h" //start song
 
 //******************************//
 
@@ -55,12 +54,6 @@ int speed; // the variable for the speed of the motors
 int movementValue; // the variable for the movement amount
 
 //*********************//
-
-// finish variable //
-
-boolean notFinished = true;
-
-//*****************//
 
 // variables for line sensor //
 
@@ -156,93 +149,84 @@ void solveMaze()
  * if not the lights go bad again and he is turning around to look for another way to solve the maze.                                                                                         *
  *********************************************************************************************************************************************************************************************/
 {
-  if (notFinished == false)
+  counter2 = 0;
+  counter1 = 0;
+  brake();
+  lightsRight();
+  rightScan();
+  delay(500);
+  echoSensor();
+  if (distance < minSafeDistance)
   {
-    brake();
-    finishMusic();
-  }
-  else
-  {
-    notFinished == true;
-    counter2 = 0;
-    counter1 = 0;
-    brake();
-    lightsRight();
-    rightScan();
+    lightsBad();
+    delay(200);
+    lightsFront();
+    frontScan();
     delay(500);
     echoSensor();
     if (distance < minSafeDistance)
     {
       lightsBad();
       delay(200);
-      lightsFront();
-      frontScan();
+      lightsLeft();
+      leftScan();
       delay(500);
       echoSensor();
-      if (distance < minSafeDistance)
+      if (distance > minSafeDistance)
       {
-        lightsBad();
-        delay(200);
-        lightsLeft();
-        leftScan();
-        delay(500);
-        echoSensor();
-        if (distance > minSafeDistance)
-        {
-          lightsGood();
-          brake();
-          startUp();
-          counter1 = 0;
-          turnLeft();
-          counter2 = 0;
-          movementValue = 29;
-          moveForward();    
-        }
-        else
-        {
-          lightsBad();
-          brake();
-          turnAround();
-          counter2 = 0;
-          movementValue = 12;
-          moveForward();
-        }
+        lightsGood();
+        brake();
+        startUp();
+        counter1 = 0;
+        turnLeft();
+        counter2 = 0;
+        movementValue = 29;
+        moveForward();    
       }
       else
       {
-        lightsGood();
-        counter2 = 0;
+        lightsBad();
         brake();
-        startUp();
+        turnAround();
         counter2 = 0;
-        movementValue = 52;
+        movementValue = 12;
         moveForward();
       }
     }
     else
     {
       lightsGood();
+      counter2 = 0;
       brake();
       startUp();
       counter2 = 0;
-      turnRight();
-      counter2 = 0;
-      movementValue = 29;
+      movementValue = 52;
       moveForward();
     }
-    uint16_t position = qtr.readLineBlack(sensorValues);   
-    //stop when all sensors detect black    
-    if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
-    {     
-       brake();    
-       delay(50);     
-       openGripper();  
-       brake();
-       backUp();
-       delay(500);
-       brake();
-       notFinished == false;
-      }
+  }
+  else
+  {
+   lightsGood();
+   brake();
+   startUp();
+   counter2 = 0;
+   turnRight();
+   counter2 = 0;
+   movementValue = 29;
+   moveForward();
+  }
+  uint16_t position = qtr.readLineBlack(sensorValues);   
+  //stop when all sensors detect black    
+  if((sensorValues[0] > 700) && (sensorValues[1] > 700) && (sensorValues[2] > 700) && (sensorValues[3] > 700) && (sensorValues[4] > 700) && (sensorValues[5] > 700) && (sensorValues[6] > 700) && (sensorValues[7] > 700))   
+  {     
+    brake();    
+    delay(50);     
+    openGripper();  
+    brake();
+    backUp();
+    delay(500);
+    brake();
+    finishMusic();
   }
 }
 
